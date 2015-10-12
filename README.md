@@ -1,10 +1,15 @@
 Cashier-BTC
 ===================
 
-Self-hosted nodejs bitcoin payment gateway. Provides REST API for anyone who wants to accept bitcoin.
+Self-hosted Node.js Bitcoin payment gateway. Provides REST API for anyone who wants to accept bitcoin.
 Request payments (invoicing), check payments (whether invoice is paid), receive callbacks if payment is made.
 Aggregate funds on final (aggregational) address.
 Depends on Bitcore, Chain, Couchdb for storage.
+
+* Simple
+* Transactions are signed locally. No private keys leak
+* No need to setup and sychronise full bitcoind node. Instantly ready to do the job.
+* Battle-tested in production: 20+ BTC turnover already
 
 
 Installation
@@ -33,6 +38,16 @@ $ nodejs worker2.js
 Open http://localhost:2222 in browser, you should see 'Cashier-BTC reporting for duty'.
 That's it, ready to use.
 Use tools like supervisord or foreverjs if necessary.
+
+License
+-------
+
+[WTFPL](http://www.wtfpl.net/txt/copying/)
+
+Author
+------
+
+Igor Korsakov
 
 
 API
