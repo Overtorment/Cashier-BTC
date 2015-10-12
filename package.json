@@ -1,0 +1,16 @@
+{
+  "name": "Cashier-BTC",
+  "version": "1.0.0",
+  "description": "Self-hosted bitcoin payment gateway",
+  "main": "cashier-btc.js",
+  "repository": "",
+  "dependencies": {
+    "async": "1.4.2",
+    "express": "4.12.4",
+    "request": "2.42.0",
+    "bitcore": "0.12.5",
+    "chain-node": "3.1.2",
+    "body-parser" : "1.12.4",
+    "qr-image" : "2.0.0"
+  }
+}

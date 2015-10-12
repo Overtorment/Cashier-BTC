@@ -1,0 +1,13 @@
+{
+    "_id": "_design\/payout",
+    "views": {
+        "all_by_timestamp": {
+            "map": "function(doc) {\n  if (doc.doctype=='payout' && doc.timestamp) {\n               emit(doc.timestamp, null);\n  }\n}"
+        },
+        "total_by_seller": {
+            "map": "function(doc) {\n  if (doc.processed=='payout_done' && !doc.is_test && doc.doctype=='payout') {\n     emit(doc.seller, doc.btc);\n  }\n}",
+            "reduce": "function(key, values, rereduce) {\n  return sum(values);   \n}"
+        }
+    },
+    "language": "javascript"
+}

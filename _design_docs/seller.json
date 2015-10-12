@@ -1,0 +1,9 @@
+{
+    "_id": "_design\/seller",
+    "views": {
+        "all_by_timestamp": {
+            "map": "function(doc) {\n  if (doc.doctype=='seller' && doc.timestamp) {\n               emit(doc.timestamp, null);\n  }\n}"
+        }
+    },
+    "language": "javascript"
+}
