@@ -11,7 +11,7 @@ Installation
 ------------
 
 ```
-$ git clone 
+$ git clone https://github.com/Overtorment/Cashier-BTC && cd Cashier-BTC
 $ npm install
 $ cp config.js.dev config.js
 ```
