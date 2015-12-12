@@ -25,13 +25,13 @@ var express = require('express')
     , bitcore = require('bitcore')
     , qr = require('qr-image')
     , config = require('../config')
-    , Chain = require('chain-node')
-    , chain = new Chain(config.chain)
+    , blockchain = require('../models/blockchain')
     , storage = require('../models/storage');
 
 
+
 router.get('/get_address_confirmed_balance/:id', function (req, res) {
-    chain.getAddress(req.params.id, function(err, resp) {
+    blockchain.getAddress(req.params.id, function(err, resp) {
         if (!resp[0]) {
             res.send("error");
         }
@@ -121,7 +121,7 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
 
 
 router.get('/check_payment/:address', function (req, res) {
-    chain.getAddress(req.params.address, function(err, resp) {
+    blockchain.getAddress(req.params.address, function(err, resp) {
         if (!resp[0]) {
             res.send(JSON.stringify({"error":"bad bitcoin address"}));
         }
@@ -163,7 +163,7 @@ router.get('/payout/:seller/:amount/:currency/:address', function (req, res) {
         if (seller === false || typeof seller.error != 'undefined') {
             return res.send(JSON.stringify({"error" : "no such seller"}));
         }
-        chain.transact(
+        blockchain.transact(
             {
                 inputs: [
                     {
@@ -204,12 +204,12 @@ router.get('/get_seller_balance/:seller', function (req, res) {
         if (seller === false || typeof seller.error != 'undefined') {
             return res.send(JSON.stringify({"error" : "no such seller"}));
         }
-        chain.getAddress(seller.address, function(err, resp) {
+        blockchain.getAddress(seller.address, function(err, resp) {
             if (err) {
                 return res.send(JSON.stringify(err));
             }
             var answer = {
-                'btc_actual' : resp[0].confirmed.balance/100/1000/1000 ,
+                'btc_actual' : resp[0].confirmed.balance/100/1000/1000,
                 'btc_unconfirmed' : resp[0].total.balance/100/1000/1000
             };
             res.send(JSON.stringify(answer));

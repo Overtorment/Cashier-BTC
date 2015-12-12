@@ -106,7 +106,9 @@ process.on('uncaughtException', function(err){
 });
 
 
-app.listen(config.port, function() {
+server = app.listen(config.port, function() {
     console.log('Listening on port %d', config.port);
 });
 
+
+module.exports = server;

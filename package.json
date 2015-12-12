@@ -11,6 +11,12 @@
     "bitcore": "0.12.5",
     "chain-node": "3.1.2",
     "body-parser" : "1.12.4",
-    "qr-image" : "2.0.0"
+    "qr-image" : "2.0.0",
+
+    "chai": "*",
+    "mocha": "*",
+    "sinon" : "*",
+    "supertest" : "*",
+    "really-need" : "*"
   }
 }
