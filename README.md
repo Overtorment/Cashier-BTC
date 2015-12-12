@@ -53,12 +53,12 @@ Igor Korsakov
 TODO
 ----
 
-[ ] Get rid of Chain and leave Bitcore only
-[ ] Add options to work through bitcoind and other bitcoin network endpoints
-~~[V] Add tests~~
-[ ] Better abstractioning (add more abstraction layers)
-[ ] Better logging & error handling
-[ ] Stats
+* [ ] Get rid of Chain and leave Bitcore only
+* [ ] Add options to work through bitcoind and other bitcoin network endpoints
+* ~~[V] Add tests~~
+* ~~[V] Better abstractioning (add more abstraction layers)~~
+* [ ] Better logging & error handling
+* [ ] Stats
 
 
 
