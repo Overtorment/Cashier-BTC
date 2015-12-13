@@ -8,7 +8,7 @@
     "async": "1.4.2",
     "express": "4.12.4",
     "request": "2.42.0",
-    "bitcore": "0.12.5",
+    "bitcore-lib": "*",
     "chain-node": "3.1.2",
     "body-parser" : "1.12.4",
     "qr-image" : "2.0.0",
