@@ -80,7 +80,7 @@ Callback_url will be requested once the invoice is paid.
 
 		http://localhost:2222/request_payment/0.005/BTC/wheres%20the%20money%20lebowski/treehorn/lebowski/http%3A%2F%2Fgoogle.com%2F
 
-	Responce
+	Response
 
 		{
 			"link" : "bitcoin:1DzJepHCRD2C9vpFjk11eXJi97juEZ3ftv?amount=0.004&message=wheres%20the%20money%20lebowski",
@@ -105,7 +105,7 @@ Check payment by a unique address received in the "request_payment" call.
 
 		http://localhost:2222/check_payment/16FsTPe5JG8yj1P31AqXrMGzu7iAet7NTL
 
-	Responce
+	Response
 
 		{
 			"btc_expected" : 0.0001009,
@@ -128,7 +128,7 @@ You might want to disable this call for security reasons.
 
 		http://localhost:2222/payout/new_test_seller/0.01/BTC/1MahZCousgNv6EAofCfi7Wpp2RKUfHH8uD
 
-	Responce
+	Response
 
 		If successfull, json document with transaction details (txid, txhex, etc)
 
@@ -146,7 +146,7 @@ Check the total balance of seller's aggregated address.
 
 		http://localhost:2222/get_seller_balance/treehorn
 
-	Responce
+	Response
 
 		{
 			"btc_actual": 0,

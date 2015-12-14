@@ -108,6 +108,9 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
 });
 
 
+
+
+
 router.get('/check_payment/:address', function (req, res) {
     blockchain.getAddress(req.params.address, function(resp) {
 
@@ -127,6 +130,9 @@ router.get('/check_payment/:address', function (req, res) {
 
     });
 });
+
+
+
 
 
 router.get('/payout/:seller/:amount/:currency/:address', function (req, res) {
@@ -176,6 +182,9 @@ router.get('/payout/:seller/:amount/:currency/:address', function (req, res) {
 });
 
 
+
+
+
 router.get('/get_seller_balance/:seller', function (req, res) {
     storage.get_seller(req.params.seller, function(seller){ // checking if such seller exists
         if (seller === false || typeof seller.error != 'undefined') {
@@ -189,11 +198,6 @@ router.get('/get_seller_balance/:seller', function (req, res) {
             res.send(JSON.stringify(answer));
         });
     });
-});
-
-
-router.get('/get_btc_usd_exchange_rate', function (req, res) {
-    return res.status(200).send(btc_usd + "");
 });
 
 

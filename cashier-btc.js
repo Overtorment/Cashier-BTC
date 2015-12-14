@@ -85,8 +85,8 @@ fs.readdir('./_design_docs', function(err, design_docs){
         storage.get_document(json._id, function(doc){
             if (!doc || doc.error == 'not_found') {
                 console.log(json._id + ' design doc needs to be created');
-                storage.save_document(json, function(responce){
-                    console.log("Creating design document resulted in:",responce);
+                storage.save_document(json, function(response){
+                    console.log("Creating design document resulted in:", response);
                 });
             }
         });
