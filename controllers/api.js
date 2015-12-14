@@ -157,8 +157,8 @@ router.get('/payout/:seller/:amount/:currency/:address', function (req, res) {
 
         blockchain.create_transaction(req.params.address, btc_to_pay-0.0001 /* fee */, 0.0001, seller.WIF,function(txhex){
             blockchain.broadcast_transaction(txhex, function(response){
-                if (typeof response.error == 'undefined'){ // no error
-                    console.log(response);
+                if (typeof response.error != 'undefined'){ // error
+                    console.log("sent error:", response);
                     return res.send(response);
                 } else { // no error
                     console.log('');
@@ -171,10 +171,8 @@ router.get('/payout/:seller/:amount/:currency/:address', function (req, res) {
                         "transaction_result" : response,
                         "to_address" : req.params.address
                     };
-                    storage.save_payout(data, function(){ res.send(response);  });
+                    return storage.save_payout(data, function(){ res.send(response);  });
                 }
-
-
             });
         });
 
