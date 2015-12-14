@@ -80,7 +80,7 @@ describe('loading express', function () {
             .expect(function(res){
                 var json = JSON.parse(res.text);
                 if (!json) throw new Error("bad json");
-                if (!('btc_actual' in json)) throw new Error("missing key");
+                if (!('btc_actual' in json)) throw new Error("missing key, got "+JSON.stringify(json));
                 if (json.btc_actual != 0) throw new Error("unexpected value");
                 if (!('btc_unconfirmed' in json)) throw new Error("missing key");
                 if (json.btc_unconfirmed != 0) throw new Error("unexpected value");

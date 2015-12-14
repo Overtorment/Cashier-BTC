@@ -19,7 +19,7 @@ exports.getAddress = function(address, callback){
     var options = {
         host: 'api.blockcypher.com',
         port: 443,
-        path: '/v1/btc/main/addrs/'+address,
+        path: '/v1/btc/main/addrs/'+address+"/balance",
         method: 'GET'
     };
 
@@ -28,7 +28,6 @@ exports.getAddress = function(address, callback){
         res.on('data', function (chunk) {
             console.log("response: " + chunk);
             chunk = JSON.parse(chunk);
-            console.log(chunk);
             callback(chunk);
         });
     });

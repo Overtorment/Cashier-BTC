@@ -30,18 +30,6 @@ var express = require('express')
 
 
 
-router.get('/get_address_confirmed_balance/:id', function (req, res) {
-    blockchain.getAddress(req.params.id, function(err, resp) {
-        if (!resp[0]) {
-            res.send("error");
-        }
-        else {
-            res.send(''+resp[0].confirmed.balance/100/1000/1000);
-        }
-    });
-});
-
-
 router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callback_url', function (req, res) {
     var exchange_rate, btc_to_ask;
 
@@ -127,8 +115,8 @@ router.get('/check_payment/:address', function (req, res) {
                 if (json !== false && json.btc_to_ask){
                     var answer = {
                         'btc_expected' : json.btc_to_ask,
-                        'btc_actual' : resp[0].confirmed.balance/100/1000/1000 ,
-                        'btc_unconfirmed' : resp.unconfirmed_balance*100*1000*1000
+                        'btc_actual' : resp.balance/100/1000/1000 ,
+                        'btc_unconfirmed' : (resp.balance+resp.unconfirmed_balance)/100/1000/1000
                     };
                     res.send(JSON.stringify(answer));
                 } else {
@@ -193,13 +181,10 @@ router.get('/get_seller_balance/:seller', function (req, res) {
         if (seller === false || typeof seller.error != 'undefined') {
             return res.send(JSON.stringify({"error" : "no such seller"}));
         }
-        blockchain.getAddress(seller.address, function(err, resp) {
-            if (err) {
-                return res.send(JSON.stringify(err));
-            }
+        blockchain.getAddress(seller.address, function(resp) {
             var answer = {
-                'btc_actual' : resp[0].confirmed.balance/100/1000/1000,
-                'btc_unconfirmed' : resp[0].total.balance/100/1000/1000
+                'btc_actual' : resp.balance/100/1000/1000 ,
+                'btc_unconfirmed' : (resp.balance+resp.unconfirmed_balance)/100/1000/1000
             };
             res.send(JSON.stringify(answer));
         });
