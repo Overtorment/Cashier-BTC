@@ -12,13 +12,28 @@ var config = require('../config');
 var querystring = require('querystring');
 var https = require("https");
 
-var Chain = require('chain-node')
-    , chain = new Chain(config.chain)
-
 
 
 exports.getAddress = function(address, callback){
-    return chain.getAddress(address, callback);
+
+    var options = {
+        host: 'api.blockcypher.com',
+        port: 443,
+        path: '/v1/btc/main/addrs/'+address,
+        method: 'GET'
+    };
+
+    var req = https.request(options, function(res) {
+        res.setEncoding('utf8');
+        res.on('data', function (chunk) {
+            console.log("response: " + chunk);
+            chunk = JSON.parse(chunk);
+            console.log(chunk);
+            callback(chunk);
+        });
+    });
+
+    req.end();
 };
 
 
@@ -42,13 +57,14 @@ exports.create_transaction = function(to_address, btc_amount, miner_fee, WIF, ca
 
         for (var i=0, l=txs.length; i<l; i++) { // iterating all transactions on that address
             var out;
-            for (var ii=0, ll=txs[i].out.length; ii<ll; ii++) { // iterating all outs on transaction to find then one unspent we own (from_address)
-                if (txs[i].out[ii].addr == from_address && txs[i].out[ii].spent === false) {
+
+            for (var ii=0, ll=txs[i].out.length; ii<ll; ii++) { // iterating all outs on transaction to find then one we own (from_address)
+                if (txs[i].out[ii].addr == from_address /*&& txs[i].out[ii].spent === false*/) {
                     out = txs[i].out[ii];
                 }
             } // end for
 
-            transaction.from({ "address":from_address
+            out && transaction.from({ "address":from_address
                 ,"txid" : txs[i].hash
                 ,"vout" : out.n
                 ,"scriptPubKey": out.script
@@ -108,5 +124,3 @@ exports.broadcast_transaction = function(txhex, callback){
 
 
 };
-
-

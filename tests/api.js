@@ -1,6 +1,6 @@
 var assert = require('assert');
 var request = require('supertest');
-require = require('really-need');
+var require = require('really-need');
 var should = require('chai').should(); //actually call the function
 
 
@@ -66,7 +66,10 @@ describe('loading express', function () {
     it('responds to /payout/:seller/:amount/:currency/:address', function testSlash(done) {
         request(server)
             .get('/payout/testseller/0.66/BTC/1HLoD9E4SDFFPDiYfNYnkBLQ85Y51J3Zb1')
-            .expect('Insufficient funds. No unspent outputs found.')
+            .expect(function(res){
+                var json = JSON.parse(res.text);
+                should.exist(json.error);
+            })
             .expect(200, done);
     });
 

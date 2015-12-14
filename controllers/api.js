@@ -121,17 +121,14 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
 
 
 router.get('/check_payment/:address', function (req, res) {
-    blockchain.getAddress(req.params.address, function(err, resp) {
-        if (!resp[0]) {
-            res.send(JSON.stringify({"error":"bad bitcoin address"}));
-        }
-        else {
+    blockchain.getAddress(req.params.address, function(resp) {
+
             storage.get_address(req.params.address, function(json){
                 if (json !== false && json.btc_to_ask){
                     var answer = {
                         'btc_expected' : json.btc_to_ask,
                         'btc_actual' : resp[0].confirmed.balance/100/1000/1000 ,
-                        'btc_unconfirmed' : resp[0].total.balance/100/1000/1000
+                        'btc_unconfirmed' : resp.unconfirmed_balance*100*1000*1000
                     };
                     res.send(JSON.stringify(answer));
                 } else {
@@ -139,7 +136,7 @@ router.get('/check_payment/:address', function (req, res) {
                     res.send(JSON.stringify(json));
                 }
             });
-        }
+
     });
 });
 
@@ -163,38 +160,30 @@ router.get('/payout/:seller/:amount/:currency/:address', function (req, res) {
         if (seller === false || typeof seller.error != 'undefined') {
             return res.send(JSON.stringify({"error" : "no such seller"}));
         }
-        blockchain.transact(
-            {
-                inputs: [
-                    {
-                        address: seller.address,
-                        private_key: seller.private_key
-                    }
-                ],
-                outputs: [
-                    {
-                        address: req.params.address,
-                        "amount": btc_to_pay * 100*1000*1000  -  10000 /* fee */ // satoshis
-                    }
-                ],
-                miner_fee_rate : 10000
-            }, function(err, resp) {
-                if (err) {
-                    console.log(err.resp.body.message);
-                    return res.send(err.resp.body.message);
-                } else {
+
+        blockchain.create_transaction(req.params.address, btc_to_pay-0.0001 /* fee */, 0.0001, seller.WIF,function(txhex){
+            blockchain.broadcast_transaction(txhex, function(response){
+                if (typeof response.error == 'undefined'){ // no error
+                    console.log(response);
+                    return res.send(response);
+                } else { // no error
                     console.log('');
                     console.log("sent "+btc_to_pay+" from "+req.params.seller+' ('+seller.address+')'+' to '+req.params.address);
-                    console.log(JSON.stringify(resp));
+                    console.log(response);
                     console.log('');
                     var data = {
                         "seller" : req.params.seller,
                         "btc" : btc_to_pay,
+                        "transaction_result" : response,
                         "to_address" : req.params.address
                     };
-                    storage.save_payout(data, function(){ res.send(JSON.stringify(resp));  });
+                    storage.save_payout(data, function(){ res.send(response);  });
                 }
+
+
             });
+        });
+
     });
 });
 
