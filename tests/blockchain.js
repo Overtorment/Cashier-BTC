@@ -47,9 +47,11 @@ describe('blockchain', function() {
                 console.log(txs[ind].out);
                 should.exist(txs[ind].out[0]);
                 should.exist(txs[ind].out[0].addr);
-                should.exist(txs[ind].out[0].script);
                 txs[ind].out[0].addr.should.equal("1EV3s4SRFWJhyQG13nX9vvS2KjBwomJbYx");
+                should.exist(txs[ind].out[0].script);
                 txs[ind].out[0].script.should.equal("76a91493e7ac0f387105913d95ac49f9a904014e472e4188ac");
+                should.exist(txs[ind].out[0].n);
+                txs[ind].out[0].n.should.equal(0);
                 done();
             };
             blockchain.fetch_transactions_by_address('1EV3s4SRFWJhyQG13nX9vvS2KjBwomJbYx', callback);

@@ -86,11 +86,23 @@ exports.create_transaction = function(to_address, btc_amount, miner_fee, WIF, ca
 
 exports.fetch_transactions_by_address = function(address, callback){
 
-    https.get("https://blockchain.info/rawaddr/"+address, function(ret){
+    https.get("https://api.blockcypher.com/v1/btc/main/addrs/"+address+"/full", function(ret){
         var json = '';
         ret.on('data', function(d) { json += d; });
         ret.on('end', function() {
             json = JSON.parse(json);
+
+            // transforming in format expected by others
+            for (var i=0, l=json.txs.length; i<l; i++) {
+                for (var ii=0, ll=json.txs[i].outputs.length; ii<ll; ii++) {
+                    json.txs[i].outputs[ii].addr = json.txs[i].outputs[ii].addresses[0];
+                    json.txs[i].outputs[ii].n = ii;
+                }
+                json.txs[i].out = json.txs[i].outputs;
+            }
+
+
+
             return callback(json.txs);
         });
     });
