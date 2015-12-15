@@ -112,14 +112,14 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
 
 
 router.get('/check_payment/:address', function (req, res) {
-    blockchain.getAddress(req.params.address, function(resp) {
+    blockchain.get_address(req.params.address, function(resp) {
 
             storage.get_address(req.params.address, function(json){
                 if (json !== false && json.btc_to_ask){
                     var answer = {
                         'btc_expected' : json.btc_to_ask,
-                        'btc_actual' : resp.balance/100/1000/1000 ,
-                        'btc_unconfirmed' : (resp.balance+resp.unconfirmed_balance)/100/1000/1000
+                        'btc_actual' : resp.btc_actual,
+                        'btc_unconfirmed' : resp.btc_unconfirmed
                     };
                     res.send(JSON.stringify(answer));
                 } else {
@@ -188,10 +188,10 @@ router.get('/get_seller_balance/:seller', function (req, res) {
         if (seller === false || typeof seller.error != 'undefined') {
             return res.send(JSON.stringify({"error" : "no such seller"}));
         }
-        blockchain.getAddress(seller.address, function(resp) {
+        blockchain.get_address(seller.address, function(resp) {
             var answer = {
-                'btc_actual' : resp.balance/100/1000/1000 ,
-                'btc_unconfirmed' : (resp.balance+resp.unconfirmed_balance)/100/1000/1000
+                'btc_actual' : resp.btc_actual,
+                'btc_unconfirmed' : resp.btc_unconfirmed
             };
             res.send(JSON.stringify(answer));
         });

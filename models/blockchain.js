@@ -14,7 +14,7 @@ var https = require("https");
 
 
 
-exports.getAddress = function(address, callback){
+exports.get_address = function(address, callback){
 
     var options = {
         host: 'api.blockcypher.com',
@@ -26,9 +26,11 @@ exports.getAddress = function(address, callback){
     var req = https.request(options, function(res) {
         res.setEncoding('utf8');
         res.on('data', function (chunk) {
-            console.log("response: " + chunk);
-            chunk = JSON.parse(chunk);
-            callback(chunk);
+            var resp = JSON.parse(chunk);
+            var ret = {};
+            ret.btc_actual = resp.balance/100/1000/1000;
+            ret.btc_unconfirmed = (resp.balance+resp.unconfirmed_balance)/100/1000/1000;
+            callback(ret);
         });
     });
 

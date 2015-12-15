@@ -52,5 +52,22 @@ describe('blockchain', function() {
     });
 
 
+    describe('#get_address()', function() {
+
+        it('should return balances associated with this address ', function (done) {
+            var blockchain = require('./../models/blockchain');
+            var callback = function(json){
+                should.exist(json);
+                should.exist(json.btc_actual);
+                should.exist(json.btc_unconfirmed);
+                assert.ok(json.btc_actual > 1);
+                done();
+            };
+            blockchain.get_address('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa', callback);
+        });
+
+    });
+
+
 });
 
