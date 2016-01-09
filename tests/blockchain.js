@@ -1,4 +1,5 @@
 var assert = require('assert');
+var expect = require('chai').expect;
 var should = require('chai').should(); //actually call the function
 
 
@@ -24,11 +25,11 @@ describe('blockchain', function() {
             var blockchain = require('./../models/blockchain');
             var callback = function(response){
                 should.exist(response.error); // because it was already broadcasted
-                console.log(response);
-                response.error.should.equal('Error sending transaction: transaction already in pool.');
+                expect( response.error.search("Error validating transaction") ).to.equal(0);
+                expect( response.error.search("has already been spent") ).to.equal(197);
                 done();
             };
-            blockchain.broadcast_transaction('0100000001e92c6788cd82f67ff2397e54e32c85820820a43bbe46884e340163ef3e6a7972000000006b483045022100bd0e50bc342d2473efa8f497afa3ab44485ad467f1d1ec90591a946a5a84a2fa02207aeeabc8bf2237efe250ab61257482d18458d15f999a0499737c47c4bfe21262012103feec0ddfb34f3ce433c5f35ce83424681530d92f2dfbc075f17ce7ccec799affffffffff02e8030000000000001976a914f7c6c1f9f6142107ed293c8fbf85fbc49eb5f1b988acb8820100000000001976a91493e7ac0f387105913d95ac49f9a904014e472e4188ac00000000', callback);
+            blockchain.broadcast_transaction ('0100000001e92c6788cd82f67ff2397e54e32c85820820a43bbe46884e340163ef3e6a7972000000006b483045022100bd0e50bc342d2473efa8f497afa3ab44485ad467f1d1ec90591a946a5a84a2fa02207aeeabc8bf2237efe250ab61257482d18458d15f999a0499737c47c4bfe21262012103feec0ddfb34f3ce433c5f35ce83424681530d92f2dfbc075f17ce7ccec799affffffffff02e8030000000000001976a914f7c6c1f9f6142107ed293c8fbf85fbc49eb5f1b988acb8820100000000001976a91493e7ac0f387105913d95ac49f9a904014e472e4188ac00000000', callback);
         });
 
     });
