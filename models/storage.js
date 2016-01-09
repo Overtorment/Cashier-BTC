@@ -10,7 +10,7 @@
 var https = require('https');
 var http = require('http');
 var request = require('request');
-var bitcore = require('bitcore');
+var bitcore = require('bitcore-lib');
 var config = require('../config');
 
 

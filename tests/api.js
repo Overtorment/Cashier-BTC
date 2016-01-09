@@ -9,7 +9,7 @@ describe('loading express', function () {
     var server;
 
     beforeEach(function () {
-        server = require('../../cashier-btc', { bustCache: true });
+        server = require('../cashier-btc', { bustCache: true });
     });
 
     afterEach(function (done) {
