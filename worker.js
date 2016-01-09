@@ -15,15 +15,9 @@
 var request = require('request')
     , async = require('async')
     , storage = require('./models/storage')
-    , Chain = require('chain-node')
-    , config = require('./config')
-    , chain = new Chain(config.chain);
+    , blockchain = require('./models/blockchain')
+    , config = require('./config');
 
-// street magic
-process.on('uncaughtException', function(err){
-    console.log('Exception: ' + err);
-	process.exit(1); // restarting just for any case
-});
 
 
 var mode = 'unprocessed' ; // can be also 'unpaid'
@@ -66,7 +60,7 @@ setInterval(function(){
         semaphore = true;
         return iteration();
     }
-}, 5 * 1000);
+}, 0.1 * 1000);
 
 
 
@@ -136,22 +130,19 @@ function process_job(job, callback){
         return callback(null, false);
     }  // пробрасываем чтоб waterfall доходил до логического конца
 
-	chain.getAddress(job.address, function(err, resp) {
-		if (!resp[0]){
-			job.processed = 'bad_address';
-			return callback(null, job);
-		} else {
+	blockchain.get_address(job.address, function(resp) {
+		{
 			// check for actually paid bitcoins here
 			// and fire url callback
-			console.log('address: ' + job.address + " expect: " + job.btc_to_ask + ' confirmed: ' + (resp[0].confirmed.balance/100/1000/1000) + ' unconfirmed: ' + (resp[0].total.balance/100/1000/1000));
+			console.log('address: ' + job.address + " expect: " + job.btc_to_ask + ' confirmed: ' + (resp.btc_actual) + ' unconfirmed: ' + (resp.btc_unconfirmed));
 
 			var paid = false;
 			if (job.btc_to_ask >= config.small_amount_threshhold){ // thats a lot, so we better check confirmed balance
-				if  ( (resp[0].confirmed.balance/100/1000/1000) /  job.btc_to_ask >= 0.95 ) {
+				if  ( (resp.btc_actual) /  job.btc_to_ask >= 0.95 ) {
                     paid = true;
                 }
 			} else { // not a huge amount, so we can check unconfirmed balace
-				if ( (resp[0].total.balance/100/1000/1000) /  job.btc_to_ask >= 0.95 ) {
+				if ( (resp.btc_unconfirmed) /  job.btc_to_ask >= 0.95 ) {
                     paid = true;
                 }
 			}
