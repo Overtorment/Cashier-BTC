@@ -22,7 +22,7 @@
 
 var express = require('express')
     , router = express.Router()
-    , bitcore = require('bitcore')
+    , bitcore = require('bitcore-lib')
     , qr = require('qr-image')
     , config = require('../config')
     , blockchain = require('../models/blockchain')

@@ -7,7 +7,7 @@
  * Author: Igor Korsakov
  * */
 
-var bitcore = require('bitcore');
+var bitcore = require('bitcore-lib');
 var config = require('../config');
 var querystring = require('querystring');
 var https = require("https");
