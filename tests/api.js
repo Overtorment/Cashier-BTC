@@ -1,9 +1,12 @@
 var request = require('supertest');
 var require = require('really-need');
 var should = require('chai').should(); //actually call the function
+var expect = require('chai').expect;
 
 
 describe('loading express', function () {
+
+    this.timeout(10000);
 
     var created_payment =false;
     var server;
@@ -86,6 +89,16 @@ describe('loading express', function () {
                 should.exist(json.btc_unconfirmed);
                 json.btc_actual.should.equal(0);
                 json.btc_unconfirmed.should.equal(0);
+            })
+            .expect(200, done);
+    });
+
+
+    it('responds to /get_address_confirmed_balance/:address', function testSlash(done) {
+        request(server)
+            .get('/get_address_confirmed_balance/1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa')
+            .expect(function(res){
+                expect( res.text > 16 ).to.equal(true);
             })
             .expect(200, done);
     });

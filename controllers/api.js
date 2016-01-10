@@ -200,4 +200,13 @@ router.get('/get_seller_balance/:seller', function (req, res) {
 
 
 
+router.get('/get_address_confirmed_balance/:address', function (req, res) {
+    blockchain.get_address(req.params.address, function(resp) {
+        return res.send(resp.btc_actual+'');
+    });
+});
+
+
+
+
 module.exports = router;
