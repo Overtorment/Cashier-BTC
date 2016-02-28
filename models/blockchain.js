@@ -38,10 +38,6 @@ exports.get_address = function(address, callback){
 };
 
 
-exports.transact = function(args, callback){
-    return chain.transact(args, callback);
-};
-
 
 
 exports.create_transaction = function(to_address, btc_amount, miner_fee, WIF, callback){
@@ -54,13 +50,13 @@ exports.create_transaction = function(to_address, btc_amount, miner_fee, WIF, ca
         .to(to_address, parseInt(btc_amount*100000000))
         .change(from_address);
 
-    exports.fetch_transactions_by_address(from_address, function(txs){
+    fetch_transactions_by_address(from_address, function(txs){
 
         for (var i=0, l=txs.length; i<l; i++) { // iterating all transactions on that address
             var out;
 
             for (var ii=0, ll=txs[i].out.length; ii<ll; ii++) { // iterating all outs on transaction to find then one we own (from_address)
-                if (txs[i].out[ii].addr == from_address /*&& txs[i].out[ii].spent === false*/) {
+                if (txs[i].out[ii].addr == from_address && typeof txs[i].out[ii].spent_by === 'undefined') {
                     out = txs[i].out[ii];
                 }
             } // end for
@@ -76,7 +72,7 @@ exports.create_transaction = function(to_address, btc_amount, miner_fee, WIF, ca
 
         transaction.sign(pk);
 
-        callback(transaction.uncheckedSerialize());
+        callback(transaction);
 
     }); // end fetch transactions
 
@@ -84,7 +80,7 @@ exports.create_transaction = function(to_address, btc_amount, miner_fee, WIF, ca
 
 
 
-exports.fetch_transactions_by_address = function(address, callback){
+function fetch_transactions_by_address(address, callback){
 
     https.get("https://api.blockcypher.com/v1/btc/main/addrs/"+address+"/full", function(ret){
         var json = '';
@@ -137,3 +133,8 @@ exports.broadcast_transaction = function(txhex, callback){
 
 
 };
+
+
+
+
+exports.fetch_transactions_by_address = fetch_transactions_by_address;
