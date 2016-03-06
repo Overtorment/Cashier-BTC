@@ -1,7 +1,10 @@
-var request = require('supertest');
-var require = require('really-need');
-var should = require('chai').should(); //actually call the function
-var expect = require('chai').expect;
+var reRequire = function(module){
+    delete require.cache[require.resolve(module)];
+    return require(module);
+};
+var request = reRequire('supertest');
+var should = reRequire('chai').should(); //actually call the function
+var expect = reRequire('chai').expect;
 
 
 describe('loading express', function () {
@@ -12,7 +15,7 @@ describe('loading express', function () {
     var server;
 
     beforeEach(function () {
-        server = require('../cashier-btc', { bustCache: true });
+        server = reRequire('../cashier-btc', { bustCache: true });
     });
 
     afterEach(function (done) {
@@ -40,12 +43,33 @@ describe('loading express', function () {
                 should.exist(json.link);
                 should.exist(json.qr);
                 should.exist(json.qr_simple);
+                console.log(json.qr);
+                console.log(json.qr_simple);
+
             })
             .expect(200, done);
     });
 
 
-    it.skip('responds to /check_payment/:address', function testSlash(done) {
+    it('responds to /generate_qr/ and qr image is actually generated', function testSlash(done) {
+        reRequire('fs').accessSync(__dirname + '/../qr', reRequire('fs').W_OK, function(err) {
+            should.not.exist(err);
+        });
+
+        var filename = +new Date();
+        request(server)
+            .get('/generate_qr/' + filename)
+            .expect(function(res){
+                should.exist(res.headers.location);
+                reRequire('fs').accessSync(__dirname + '/..', reRequire('fs').W_OK, function(err) {
+                    should.not.exist(err);
+                });
+            })
+            .expect(301, done);
+    });
+
+
+    it('responds to /check_payment/:address', function testSlash(done) {
         request(server)
             .get('/check_payment/'+created_payment.address)
             .expect(function(res){
@@ -64,21 +88,18 @@ describe('loading express', function () {
     });
 
 
-    it.skip('responds to /payout/:seller/:amount/:currency/:address', function testSlash(done) {
+    it('responds to /payout/:seller/:amount/:currency/:address', function testSlash(done) {
         request(server)
             .get('/payout/testseller/0.66/BTC/1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa') // satoshi's address from block#0
             .expect(function(res){
                 var json = JSON.parse(res.text);
                 should.exist(json.error); // not enough balance
-                console.log("++++++++++++++++++++++++++++++++++++++++++");
-                console.log(json);
-                console.log("++++++++++++++++++++++++++++++++++++++++++");
             })
             .expect(200, done);
     });
 
 
-    it.skip('responds to /get_seller_balance/testseller', function testSlash(done) {
+    it('responds to /get_seller_balance/testseller', function testSlash(done) {
         request(server)
             .get('/get_seller_balance/testseller')
             .expect(function(res){
@@ -94,7 +115,7 @@ describe('loading express', function () {
     });
 
 
-    it.skip('responds to /get_address_confirmed_balance/:address', function testSlash(done) {
+    it('responds to /get_address_confirmed_balance/:address', function testSlash(done) {
         request(server)
             .get('/get_address_confirmed_balance/1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa')
             .expect(function(res){
