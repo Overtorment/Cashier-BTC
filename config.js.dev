@@ -3,12 +3,15 @@ module.exports = {
 	"base_url" : "http://localhost:2222",
 	"base_url_qr" : "http://localhost:2222",
 	"couchdb" : "http://localhost:5984/cashier-btc",  // install locally or use https://cloudant.com
-	"rely_on" : "blockcypher.com", //  "blockcypher.com" or "bitcoind" (TODO)
+	"rely_on" : "bitcore", //  "blockcypher.com" or "bitcore" (TODO)
 	"blockcypher.com" : {
 		"host" : "api.blockcypher.com"
 	},
-	"bitcoind":{
-	}
+	"bitcore" : {
+		"host" : "1.2.3.4",
+        "port" : 3001,
+        "base_path" : "/insight-api"
+	},
 	"small_amount_threshhold" : 0.25, // sums bigger than that will require confirmed balance to be paid
 	"process_unpaid_for_period" :  24*3600, // worker that checks status of addresses
 	"process_paid_for_period" :  30*24*3600 // worker2 that sweeps temporary wallets

@@ -231,6 +231,13 @@ exports.fetch_transactions_by_address2 =  function(address, callback) {
                 "script_type": "pay-to-pubkey-hash",
                 "addr": "1D94Wjrs8v1XhtjkYdmN2wYrD8yypkqati",
                 "n": 2
+            }, { // fake
+                "value": 6666,
+                "script": "76a9145c08b6e48a3baeff48874f658c077e90c1bad97f88ac",
+                "addresses": ["19Pdc8xh66RfTqMdQbs7gxTYqcAY48qRTL"],
+                "script_type": "pay-to-pubkey-hash",
+                "addr": "19Pdc8xh66RfTqMdQbs7gxTYqcAY48qRTL",
+                "n": 3
             }]
         }]
     );

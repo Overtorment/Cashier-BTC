@@ -88,7 +88,7 @@ describe('loading express', function () {
     });
 
 
-    it('responds to /payout/:seller/:amount/:currency/:address', function testSlash(done) {
+    /*it.skip('responds to /payout/:seller/:amount/:currency/:address', function testSlash(done) {
         request(server)
             .get('/payout/testseller/0.66/BTC/1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa') // satoshi's address from block#0
             .expect(function(res){
@@ -96,7 +96,7 @@ describe('loading express', function () {
                 should.exist(json.error); // not enough balance
             })
             .expect(200, done);
-    });
+    }); */
 
 
     it('responds to /get_seller_balance/testseller', function testSlash(done) {

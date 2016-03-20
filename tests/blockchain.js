@@ -6,6 +6,8 @@ var should = require('chai').should(); //actually call the function
 
 describe('blockchain', function () {
 
+    this.timeout(20000);
+
     describe('#create_transaction()', function () {
 
         it('should return valid TX hex', function (done) {
@@ -18,11 +20,14 @@ describe('blockchain', function () {
             blockchain.create_transaction("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa" /* satoshi's address from block#0 */, 0.00001 /* amount */, 0 /* no fee */,"KzK4GURRJAhzJud6i1widpzkWHTbZq2yV66FHFvqBCzPDaVMAjqD" /* used WIF */, callback);
         });
 
-        it('should correctly consider all used inputs', function(){
+        it('should correctly consider all used inputs', function(done){
             var blockchain = rewire('./../models/blockchain');
             blockchain.__set__("provider", { fetch_transactions_by_address : require("../tests/stubs").fetch_transactions_by_address2 });
             var callback = function (transaction) {
-                expect(transaction.toObject().inputs.length).to.equal(0);
+                expect(transaction.toObject().outputs.length).to.equal(2);
+                expect(transaction.toObject().outputs[0].satoshis).to.equal(1000);
+                expect(transaction.toObject().outputs[1].satoshis).to.equal(5666);
+                done();
             };
             blockchain.create_transaction("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa" /* satoshi's address from block#0 */, 0.00001 /* amount */, 0 /* no fee */,"KzK4GURRJAhzJud6i1widpzkWHTbZq2yV66FHFvqBCzPDaVMAjqD" /* used WIF */, callback);
         });
@@ -61,9 +66,22 @@ describe('blockchain', function () {
                 txs[ind].out[0].script.should.equal("76a91493e7ac0f387105913d95ac49f9a904014e472e4188ac");
                 should.exist(txs[ind].out[0].n);
                 txs[ind].out[0].n.should.equal(0);
+                console.log(txs[ind].out[0]);
+                txs[ind].out[0].value.should.equal(100000);
+                should.exist(txs[ind].out[0].spent_by);
+                txs[ind].out[0].spent_by.should.equal('3e073bbc9b8d35001ee3f2b290651e10648291076c323ef77faa9d8011a809a5');
                 done();
             };
             blockchain.fetch_transactions_by_address('1EV3s4SRFWJhyQG13nX9vvS2KjBwomJbYx', callback);
+        });
+
+        it('should return all TXs', function (done) {
+            var blockchain = require('./../models/blockchain');
+            var callback = function(txs){
+                expect(txs.length).to.be.above(100);
+                done();
+            };
+            blockchain.fetch_transactions_by_address('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa', callback);
         });
 
     });

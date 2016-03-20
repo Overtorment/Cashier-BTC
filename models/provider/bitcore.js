@@ -10,6 +10,7 @@
 var config = require('../../config');
 var https = require("https");
 var http = require("http");
+var async = require("async");
 var querystring = require('querystring');
 
 
@@ -43,25 +44,66 @@ function fetch_transactions_by_address(address, callback){
         ret.on('end', function() {
             json = JSON.parse(json);
 
-            // transforming in format expected by others
-            for (var i=0, l=json.txs.length; i<l; i++) {
-                json.txs[i].hash = json.txs[i].txid;
-                for (var ii=0, ll=json.txs[i].vout.length; ii<ll; ii++) {
-                    json.txs[i].vout[ii].addr = json.txs[i].vout[ii].scriptPubKey.addresses[0];
-                    json.txs[i].vout[ii].n = ii;
-                    json.txs[i].vout[ii].script = json.txs[i].vout[ii].scriptPubKey.hex;
-                }
-                json.txs[i].out = json.txs[i].vout;
-            }
+            if (json.pagesTotal > 1) {
+                var all_tx = [];
+                var jobs = [];
+                var jobs_c = [];
+                for (var c=1; c <= 15; c++){
+                    jobs_c.push(c);
+                    jobs.push(function(callback){
+                        var cc = jobs_c.pop();
+                        http.get("http://"+config.bitcore.host+":"+config.bitcore.port+config.bitcore.base_path+"/txs/?address="+address+'&pageNum='+cc, function(ret2){
+                            var json2 = '';
+                            ret2.on('data', function(d2) { json2 += d2; });
+                            ret2.on('end', function() {
+                                json2 = JSON.parse(json2);
+                                callback(null, json2);
+                            });
 
-            return callback(json.txs);
+                        });
+
+                    });
+                }
+
+                async.parallel(jobs, function(err, results){
+                    for (var i = 0; i < results.length; i++) {
+                        all_tx = all_tx.concat(results[i].txs);
+                    }
+                    return callback(transform_txs(all_tx));
+                });
+
+            } else {
+                return callback(transform_txs(json.txs));
+            } // if
+
         });
     });
 
 }
 
 
+function transform_txs(txs){ // transforming in format expected by others
+    for (var i=0, l=txs.length; i<l; i++) {
+        txs[i].hash = txs[i].txid;
+        for (var ii=0, ll=txs[i].vout.length; ii<ll; ii++) {
+            if (typeof txs[i].vout[ii].scriptPubKey.addresses !== 'undefined') { // genesis?
+                txs[i].vout[ii].addr = txs[i].vout[ii].scriptPubKey.addresses[0];
+            }
+            txs[i].vout[ii].value *= 100000000; // btc to satoshis
+            if (txs[i].vout[ii].spentTxId) txs[i].vout[ii].spent_by = txs[i].vout[ii].spentTxId;
+            txs[i].vout[ii].n = ii;
+            txs[i].vout[ii].script = txs[i].vout[ii].scriptPubKey.hex;
+        }
+        txs[i].out = txs[i].vout;
+    }
+    return txs;
+}
+
+
 function broadcast_transaction(txhex, callback){
+    if (typeof txhex == 'object') txhex = txhex.uncheckedSerialize();
+    console.log('--', txhex, '--');
+    //process.exit();
     var post_data = querystring.stringify({
         'rawtx' : txhex
     });
