@@ -48,7 +48,7 @@ function fetch_transactions_by_address(address, callback){
                 var all_tx = [];
                 var jobs = [];
                 var jobs_c = [];
-                for (var c=1; c <= 15; c++){
+                for (var c=1; c <= json.pagesTotal; c++){
                     jobs_c.push(c);
                     jobs.push(function(callback){
                         var cc = jobs_c.pop();

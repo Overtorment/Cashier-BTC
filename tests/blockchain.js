@@ -6,7 +6,7 @@ var should = require('chai').should(); //actually call the function
 
 describe('blockchain', function () {
 
-    this.timeout(20000);
+    this.timeout(30000);
 
     describe('#create_transaction()', function () {
 
