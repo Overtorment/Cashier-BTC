@@ -48,7 +48,7 @@ function fetch_transactions_by_address(address, callback){
                 var all_tx = [];
                 var jobs = [];
                 var jobs_c = [];
-                for (var c=1; c <= json.pagesTotal; c++){
+                for (var c=0; c < json.pagesTotal; c++){
                     jobs_c.push(c);
                     jobs.push(function(callback){
                         var cc = jobs_c.pop();
@@ -71,7 +71,6 @@ function fetch_transactions_by_address(address, callback){
                     }
                     return callback(transform_txs(all_tx));
                 });
-
             } else {
                 return callback(transform_txs(json.txs));
             } // if
@@ -89,7 +88,7 @@ function transform_txs(txs){ // transforming in format expected by others
             if (typeof txs[i].vout[ii].scriptPubKey.addresses !== 'undefined') { // genesis?
                 txs[i].vout[ii].addr = txs[i].vout[ii].scriptPubKey.addresses[0];
             }
-            txs[i].vout[ii].value *= 100000000; // btc to satoshis
+            txs[i].vout[ii].value =  parseInt(txs[i].vout[ii].value*100000000); // btc to satoshis
             if (txs[i].vout[ii].spentTxId) txs[i].vout[ii].spent_by = txs[i].vout[ii].spentTxId;
             txs[i].vout[ii].n = ii;
             txs[i].vout[ii].script = txs[i].vout[ii].scriptPubKey.hex;
@@ -102,8 +101,7 @@ function transform_txs(txs){ // transforming in format expected by others
 
 function broadcast_transaction(txhex, callback){
     if (typeof txhex == 'object') txhex = txhex.uncheckedSerialize();
-    console.log('--', txhex, '--');
-    //process.exit();
+
     var post_data = querystring.stringify({
         'rawtx' : txhex
     });
@@ -122,7 +120,7 @@ function broadcast_transaction(txhex, callback){
     var req = http.request(options, function(res) {
         res.setEncoding('utf8');
         res.on('data', function (chunk) {
-            if (chunk.indexOf('dust') !== false) return callback({error: chunk});
+            if (chunk.indexOf('dust') !== -1) return callback({error: chunk});
             chunk = JSON.parse(chunk);
             callback(chunk);
         });

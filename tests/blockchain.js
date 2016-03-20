@@ -26,10 +26,12 @@ describe('blockchain', function () {
             var callback = function (transaction) {
                 expect(transaction.toObject().outputs.length).to.equal(2);
                 expect(transaction.toObject().outputs[0].satoshis).to.equal(1000);
-                expect(transaction.toObject().outputs[1].satoshis).to.equal(5666);
+                expect(transaction.toObject().outputs[1].satoshis).to.equal(4666);
+                console.log(transaction.toObject().inputs);
+                console.log(transaction.toObject().outputs);
                 done();
             };
-            blockchain.create_transaction("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa" /* satoshi's address from block#0 */, 0.00001 /* amount */, 0 /* no fee */,"KzK4GURRJAhzJud6i1widpzkWHTbZq2yV66FHFvqBCzPDaVMAjqD" /* used WIF */, callback);
+            blockchain.create_transaction("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa" /* satoshi's address from block#0 */, 0.00001 /* amount */, 0.00001 /* fee */,"KzK4GURRJAhzJud6i1widpzkWHTbZq2yV66FHFvqBCzPDaVMAjqD" /* used WIF */, callback);
         });
 
     });

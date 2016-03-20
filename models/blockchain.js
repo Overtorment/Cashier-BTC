@@ -43,14 +43,16 @@ exports.create_transaction = function(to_address, btc_amount, miner_fee, WIF, ca
 
             total_satoshis += out.value;
 
-            if (total_satoshis >= ((btc_amount*100000000) + (miner_fee * 100000000))) break; // we have enough outs
+            if (total_satoshis >= (parseInt(btc_amount*100000000) + parseInt(miner_fee * 100000000))) break; // we have enough outs
 
         } // end for
 
+        console.log('total_satoshis ', total_satoshis );
+        console.log(parseInt(miner_fee * 100000000));
+
         transaction
                 .to(to_address, parseInt(btc_amount*100000000))
-                .to(from_address, parseInt(total_satoshis - (btc_amount*100000000)))
-                .fee(miner_fee * 100000000)
+                .fee(parseInt(miner_fee * 100000000))
                 .change(from_address)
                 .sign(pk);
 
