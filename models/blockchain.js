@@ -47,9 +47,6 @@ exports.create_transaction = function(to_address, btc_amount, miner_fee, WIF, ca
 
         } // end for
 
-        console.log('total_satoshis ', total_satoshis );
-        console.log(parseInt(miner_fee * 100000000));
-
         transaction
                 .to(to_address, parseInt(btc_amount*100000000))
                 .fee(parseInt(miner_fee * 100000000))
