@@ -20,7 +20,7 @@ $ npm install
 $ cp config.js.dev config.js
 ```
 
-* Install Bitcore full node and Bitcore Insight API
+* Install [Bitcore full node and Bitcore Insight API](https://github.com/bitpay/insight-api)
 * Install Couchdb (install one if needed, or use https://cloudant.com)
 
 Edit config.js:
