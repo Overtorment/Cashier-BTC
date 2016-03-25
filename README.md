@@ -4,12 +4,11 @@ Cashier-BTC
 Self-hosted Node.js Bitcoin payment gateway. Provides REST API for anyone who wants to accept bitcoin.
 Request payments (invoicing), check payments (whether invoice is paid), receive callbacks if payment is made.
 Aggregate funds on final (aggregational) address.
-Depends on Bitcore, Chain, Couchdb for storage.
+Depends on Bitcore, Couchdb for storage.
 
 * Simple
 * Transactions are signed locally. No private keys leak
-* No need to setup and sychronise full bitcoind node. Instantly ready to do the job.
-* Battle-tested in production: 20+ BTC turnover already
+* Battle-tested in production: 30+ BTC turnover already
 
 
 Installation
@@ -21,10 +20,20 @@ $ npm install
 $ cp config.js.dev config.js
 ```
 
-Edit config.js: 
+* Install Bitcore full node and Bitcore Insight API
+* Install Couchdb (install one if needed, or use https://cloudant.com)
 
-* Point it to a new Couchdb database (install one if needed, or just go to https://cloudant.com)
-* Get a https://chain.com account and provide your own Chain keys
+Edit config.js:
+
+* Point it to a new Couchdb database
+* Point it to a Bitcore server
+
+Tests
+-----
+
+```
+$ npm test
+```
 
 Running
 -------
@@ -37,7 +46,7 @@ $ nodejs worker2.js
 
 Open http://localhost:2222 in browser, you should see 'Cashier-BTC reporting for duty'.
 That's it, ready to use.
-Use tools like supervisord or foreverjs if necessary.
+Use tools like supervisord or foreverjs to keep it running.
 
 License
 -------
@@ -53,7 +62,7 @@ Igor Korsakov
 TODO
 ----
 
-* [ ] Get rid of Chain and leave Bitcore only
+* ~~[V] Get rid of Chain and leave Bitcore only~~
 * [ ] Add options to work through bitcoind and other bitcoin network endpoints
 * ~~[V] Add tests~~
 * ~~[V] Better abstractioning (add more abstraction layers)~~
