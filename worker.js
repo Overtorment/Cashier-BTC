@@ -29,21 +29,17 @@ var mode = 'unprocessed' ; // can be also 'unpaid'
 */
 
 
-var iteration = function(){ // тело воркера
+var iteration = function(next){ // тело воркера
 	async.waterfall([
-		function( callback ){  console.log('.');get_job(callback); },
-		function( json, callback ){ prepare_job(json, callback); },
-		function( json, callback ){ process_job(json, callback); },
-		function( json, callback ){ save_job_results(json, callback);  }
-	], function(err){
+		get_job,
+		prepare_job,
+		process_job,
+		save_job_results
+	], function(){
 		if (++iteration.num_times_executed >= 10000) {
-			setTimeout(function(){
-                console.log(err);
-				console.log("Grace restart");
-				process.exit(0); 
-			}, 10*1000); // grace period for all processes to end, and then terminate
+            process.exit(0);
 		} else {
-			semaphore=false;   // сбрасываем семафор чтобы воркер работал бесконечно
+			next();
 		}
 	}); 
 };
@@ -51,27 +47,9 @@ var iteration = function(){ // тело воркера
 iteration.num_times_executed = 0;
 
 
-
-// костыльный способ сделать воркер.
-// в отличии от while(1){} не отъест CPU камня в потолок
-var semaphore = false; // используем для организации воркера
-setInterval(function(){
-    if (!semaphore){
-        semaphore = true;
-        return iteration();
-    }
-}, 0.1 * 1000);
-
-
-
-
-
-
-
-
-
-
-
+async.forever(
+	iteration
+);
 
 
 
