@@ -15,32 +15,24 @@
 
 var async = require('async')
     , storage = require('./models/storage')
-    , Chain = require('chain-node')
     , config = require('./config')
-    , chain = new Chain(config.chain);
-
-// street magic
-process.on('uncaughtException', function(err){
-    console.log('Exception: ' + err);
-	process.exit(1); // restarting just for any case
-});
+    , blockchain = require('./models/blockchain');
 
 
-var iteration = function(){ // тело воркера
+var iteration = function(next){ // тело воркера
 	async.waterfall([
-		function( callback ){  console.log('.');get_job(callback); },
-		function( json, callback ){ prepare_job(json, callback); },
-		function( json, callback ){ process_job(json, callback); },
-		function( json, callback ){ save_job_results(json, callback); }
+        get_job,
+        process_job,
+        save_job_results,
+		function( json, callback ){ console.log('.');setTimeout(callback, 1000); }
 	], function(err){
-		if (++iteration.num_times_executed >= 10000) {
+		if (++iteration.num_times_executed >= 100) {
+            console.log("Grace restart");
 			setTimeout(function(){
-                console.log(err);
-				console.log("Grace restart");
 				process.exit(0); 
 			}, 10*1000); // grace period for all processes to end, and then terminate
 		} else {
-			semaphore=false;   // сбрасываем семафор чтобы воркер работал бесконечно
+			next();
 		}
 	});
 };
@@ -48,24 +40,9 @@ var iteration = function(){ // тело воркера
 iteration.num_times_executed = 0;
 
 
-
-// костыльный способ сделать воркер.
-// в отличии от while(1){} не отъест CPU камня в потолок
-var semaphore = false; // используем для организации воркера
-setInterval(function(){
-    if (!semaphore){
-        semaphore = true;
-        return iteration();
-    }
-}, 10 * 1000);
-
-
-
-
-
-
-
-
+async.forever(
+    iteration
+);
 
 
 
@@ -82,73 +59,47 @@ function get_job(callback){
 }
 
 
-
-function prepare_job(json, callback){
+function process_job(json, callback){
 	json = JSON.parse(json);
 	if (typeof json.rows[0] == 'undefined') {
 		return callback(null, false);
 	}  // no jobs, пробрасываем чтоб waterfall доходил до логического конца
 
-	json = json.rows[0].doc;
-	return callback(null, json);
-}
+	var job = json.rows[0].doc;
 
-
-function process_job(job, callback){
 	if (job === false) {
 		return callback(null, false);
 	}  // пробрасываем чтоб waterfall доходил до логического конца
 
-	chain.getAddress(job.address, function(err, resp) { // getting address balance
-		if (!resp[0]){
-			job.processed = 'bad_paid_address';
-			return callback(null, job);
-		} else {
-			console.log('address: ' + job.address + " expect: " + job.btc_to_ask + ' confirmed: '+ (resp[0].confirmed.balance/100/1000/1000) + ' unconfirmed: '+ (resp[0].total.balance/100/1000/1000));
+	blockchain.get_address(job.address, function(resp) { // getting address balance
 
-			if (resp[0].confirmed.balance == resp[0].total.balance){ // balance is ok, need to transfer it
-				storage.get_seller(job.seller, function(seller){ // get seller's address
-					console.log("transferring from " + job.address + " to seller's address "  + seller.address);
-					console.log(seller);
-					if (seller === false || !seller.address) {
-                        return callback(null, false);
-                    }
-					try {
-					chain.transact(
-					  {
-						inputs: [
-						  {
-							address: job.address,
-							private_key: job.private_key
-						  }
-						],
-						outputs: [
-						  {
-							address: seller.address,
-							"amount": resp[0].confirmed.balance  -    10000 /* fee */ // satoshis
-						  }
-						],
-						miner_fee_rate : 10000
-					  }, function(err, resp) {
-							if (err) {
-								console.log("err: " + err);
-								return callback(null, false);
-							} else {
-								console.log(resp);
-								job.processed = 'paid_and_sweeped';
-								return callback(null, job);
-							}
-					  }); // end chain.transact()
-					  } catch (err) {
-						console.log('Transaction error!', err);
-						return callback(null, false);
-					  }
-				});
-			} else { // balance is not ok, probably it is still unconfirmed
-				return callback(null, false);
-			}
-		}
+        console.log('address: ' + job.address + " expect: " + job.btc_to_ask + ' confirmed: '+ (resp.btc_actual) + ' unconfirmed: '+ (resp.btc_unconfirmed));
 
+        if (resp.btc_actual == resp.btc_unconfirmed){ // balance is ok, need to transfer it
+            storage.get_seller(job.seller, function(seller){ // get seller's address
+                console.log("transferring " + resp.btc_actual + " BTC (minus fee) from " + job.address + " to seller's address "  + seller.address);
+                if (seller === false || !seller.address) {
+                    console.log('seller problem, skip');
+                    return callback(null, false);
+                }
+
+                blockchain.create_transaction(seller.address, resp.btc_actual-0.0001, 0.0001, job.WIF, function(transaction){
+                    blockchain.broadcast_transaction(transaction, function(result) {
+                        if (!result.error)
+                            job.processed = 'paid_and_sweeped';
+                        else
+                            job.processed = 'paid';
+
+                        job.blockchain_responses = job.blockchain_responses || {};
+                        job.blockchain_responses[+new Date()] = result;
+                        return callback(null, job);
+                    });
+                });
+            });
+        } else { // balance is not ok, probably it is still unconfirmed
+            console.log('balance is not ok, skip');
+            return callback(null, false);
+        }
 	});
 }
 
