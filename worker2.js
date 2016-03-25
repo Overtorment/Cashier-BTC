@@ -24,40 +24,23 @@ var iteration = function(next){ // тело воркера
         get_job,
         process_job,
         save_job_results,
-		function( json, callback ){ console.log('.');setTimeout(callback, 1000); }
-	], function(err){
-		if (++iteration.num_times_executed >= 100) {
-            console.log("Grace restart");
-			setTimeout(function(){
-				process.exit(0); 
-			}, 10*1000); // grace period for all processes to end, and then terminate
-		} else {
-			next();
-		}
+		function( json, callback ){ console.log('.'); setTimeout((callback ? callback : json), 1000); }
+	], function(){
+		next();
 	});
 };
 
 iteration.num_times_executed = 0;
 
-
-async.forever(
+async.whilst(
+    function () { return iteration.num_times_executed++ < 100; },
     iteration
 );
-
-
-
-
-
-
-
-
-
 
 
 function get_job(callback){
 	storage.get_paid_adresses_younger_than(Math.floor(Date.now() / 1000)-config.process_paid_for_period, function(json){ return callback(null, json); });
 }
-
 
 function process_job(json, callback){
 	json = JSON.parse(json);
@@ -89,6 +72,8 @@ function process_job(json, callback){
                             job.processed = 'paid_and_sweeped';
                         else
                             job.processed = 'paid';
+
+                        console.log(JSON.stringify(result));
 
                         job.blockchain_responses = job.blockchain_responses || {};
                         job.blockchain_responses[+new Date()] = result;
