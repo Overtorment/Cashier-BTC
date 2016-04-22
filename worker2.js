@@ -66,7 +66,7 @@ function process_job(json, callback){
                     return callback(null, false);
                 }
 
-                blockchain.create_transaction(seller.address, resp.btc_actual-0.0001, 0.0001, job.WIF, function(transaction){
+                blockchain.create_transaction(seller.address, resp.btc_actual-0.0002, 0.0002, job.WIF, function(transaction){
                     blockchain.broadcast_transaction(transaction, function(result) {
                         if (!result.error)
                             job.processed = 'paid_and_sweeped';

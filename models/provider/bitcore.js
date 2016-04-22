@@ -20,7 +20,11 @@ function get_address(address, callback){
     http.get("http://"+config.bitcore.host+":"+config.bitcore.port+config.bitcore.base_path+"/addr/"+address+'?noTxList=1', function(res){
         res.setEncoding('utf8');
         res.on('data', function (chunk) {
-            var resp = JSON.parse(chunk);
+            try {
+                var resp = JSON.parse(chunk);
+            } catch (e) {
+              return callback(false);
+            }
             var ret = {};
             ret.btc_actual = resp.balance;
             ret.btc_unconfirmed = resp.balance+resp.unconfirmedBalance;
