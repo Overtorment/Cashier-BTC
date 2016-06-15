@@ -71,7 +71,7 @@ function get_job(callback){
 
 function prepare_job(json, callback){
 	json = JSON.parse(json);
-	if (typeof json.rows[0] == 'undefined'){ // no jobs, inverting mode
+	if (!json || typeof json.rows == 'undefined' || typeof json.rows[0] == 'undefined'){ // no jobs, inverting mode
         console.log('no jobs, inverting mode');
 		if (mode == 'unprocessed') {
             mode =  'unpaid';
