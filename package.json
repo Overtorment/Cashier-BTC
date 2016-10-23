@@ -6,20 +6,21 @@
   "repository": "https://github.com/Overtorment/Cashier-BTC",
   "license": "WTFPL",
   "author": "Igor Korsakov",
-  "scripts" : {
-    "test" : "mocha tests"
+  "scripts": {
+    "test": "mocha tests"
   },
   "dependencies": {
     "async": "*",
-    "express": "*",
-    "request": "*",
     "bitcore-lib": "*",
-    "body-parser" : "*",
-    "qr-image" : "*",
-    "rewire": "*",
+    "body-parser": "*",
     "chai": "*",
+    "express": "*",
     "mocha": "*",
-    "sinon" : "*",
-    "supertest" : "*"
+    "qr-image": "*",
+    "request": "*",
+    "rewire": "*",
+    "sinon": "*",
+    "standard": "^8.4.0",
+    "supertest": "*"
   }
 }
