@@ -88,7 +88,6 @@ describe('storage', function () {
       var sellerId = require('crypto').createHash('md5').update(Math.random().toString()).digest('hex')
 
       storage.save_seller(sellerId, function (response) {
-
         // now fetching this document back
         storage.get_document(response.id, function (data2) {
           if (!data2) throw new Error()
