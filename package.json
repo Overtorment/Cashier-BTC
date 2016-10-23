@@ -7,11 +7,11 @@
   "license": "WTFPL",
   "author": "Igor Korsakov",
   "scripts": {
-    "test": "mocha tests"
+    "test": "./node_modules/.bin/mocha tests/*"
   },
   "dependencies": {
     "async": "*",
-    "bitcore-lib": "*",
+    "bitcore-lib": "0.13.13",
     "body-parser": "*",
     "chai": "*",
     "express": "*",
