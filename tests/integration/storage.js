@@ -5,10 +5,10 @@ var assert = require('assert')
 describe('storage', function () {
   this.timeout(60000)
 
-  describe('get_document()', function () {
+  describe('getDocument()', function () {
     it('should return any db document', function (done) {
       var storage = require('./../../models/storage')
-      storage.get_document('_design/address', function (data) {
+      storage.getDocument('_design/address', function (data) {
         if (!data) throw new Error()
         assert.equal(data._id, '_design/address')
         assert.equal(data.language, 'javascript')
@@ -24,7 +24,7 @@ describe('storage', function () {
     })
   })
 
-  describe('save_address() && get_address()', function () {
+  describe('saveAddress() && getAddress()', function () {
     it('should save document with address data, and get it back', function (done) {
       var storage = require('./../../models/storage')
       var data = {
@@ -38,12 +38,12 @@ describe('storage', function () {
         'callback_url': 'http://fu.bar'
       }
 
-      storage.save_address(data, function (response) {
+      storage.saveAddress(data, function (response) {
         assert.ok(response.ok)
         assert.ok(response.id)
 
                 // now fetching this document back
-        storage.get_address(response.id, function (data2) {
+        storage.getAddress(response.id, function (data2) {
           if (!data2) throw new Error()
           assert.equal(data2._id, response.id)
           assert.ok(data2.private_key)
@@ -62,17 +62,17 @@ describe('storage', function () {
     })
   })
 
-  describe('save_payout()', function () {
+  describe('savePayout()', function () {
     it('saves document with details on the payout', function (done) {
       var storage = require('./../../models/storage')
       var data = {}
 
-      storage.save_payout(data, function (response) {
+      storage.savePayout(data, function (response) {
         assert.ok(response.ok)
         assert.ok(response.id)
 
         // now fetching this document back
-        storage.get_document(response.id, function (data2) {
+        storage.getDocument(response.id, function (data2) {
           if (!data2) throw new Error()
           assert.equal(data2.processed, 'payout_done')
           assert.equal(data2.doctype, 'payout')
@@ -82,14 +82,14 @@ describe('storage', function () {
     })
   })
 
-  describe('save_seller()', function () {
+  describe('saveSeller()', function () {
     it('saves document with details on the seller', function (done) {
       var storage = require('./../../models/storage')
       var sellerId = require('crypto').createHash('md5').update(Math.random().toString()).digest('hex')
 
-      storage.save_seller(sellerId, function (response) {
+      storage.saveSeller(sellerId, function (response) {
         // now fetching this document back
-        storage.get_document(response.id, function (data2) {
+        storage.getDocument(response.id, function (data2) {
           if (!data2) throw new Error()
           assert.ok(data2.WIF)
           assert.ok(data2.address)
@@ -104,7 +104,7 @@ describe('storage', function () {
     })
   })
 
-  describe('save_address() && get_unprocessed_adresses_younger_than()', function () {
+  describe('saveAddress() && getUnprocessedAdressesYoungerThan()', function () {
     it('saves unprocessed address to database and fetches it back', function (done) {
       var storage = require('./../../models/storage')
       var data = {
@@ -118,19 +118,19 @@ describe('storage', function () {
         'callback_url': 'http://fu.bar'
       }
 
-      storage.save_address(data, function (response) {
+      storage.saveAddress(data, function (response) {
         assert.ok(response.ok)
         assert.ok(response.id)
 
         // now fetching this document back
-        storage.get_address(response.id, function (data2) {
+        storage.getAddress(response.id, function (data2) {
           if (!data2) throw new Error()
           assert.equal(data2._id, response.id)
           assert.ok(data2.timestamp)
           assert.equal(data2.doctype, 'address')
 
-          // now, testing if get_unprocessed_adresses_younger_than() works
-          storage.get_unprocessed_adresses_younger_than(data2.timestamp, function (data3) {
+          // now, testing if getUnprocessedAdressesYoungerThan() works
+          storage.getUnprocessedAdressesYoungerThan(data2.timestamp, function (data3) {
             if (!data3) throw new Error()
             data3 = JSON.parse(data3)
             data3 = data3['rows'][0]['doc']

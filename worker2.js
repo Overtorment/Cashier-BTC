@@ -39,7 +39,7 @@ async.whilst(
 )
 
 function getJob (callback) {
-  storage.get_paid_adresses_younger_than(Math.floor(Date.now() / 1000) - config.process_paid_for_period, function (json) { return callback(null, json) })
+  storage.getPaidAdressesYoungerThan(Math.floor(Date.now() / 1000) - config.process_paid_for_period, function (json) { return callback(null, json) })
 }
 
 function processJob (json, callback) {
@@ -54,21 +54,21 @@ function processJob (json, callback) {
     return callback(null, false)
   }  // пробрасываем чтоб waterfall доходил до логического конца
 
-  blockchain.get_address(job.address, function (resp) {
+  blockchain.getAddress(job.address, function (resp) {
  // getting address balance
 
     console.log('address: ' + job.address + ' expect: ' + job.btc_to_ask + ' confirmed: ' + (resp.btc_actual) + ' unconfirmed: ' + (resp.btc_unconfirmed))
 
     if (+resp.btc_actual === +resp.btc_unconfirmed) { // balance is ok, need to transfer it
-      storage.get_seller(job.seller, function (seller) { // get seller's address
+      storage.getSeller(job.seller, function (seller) { // get seller's address
         console.log('transferring ' + resp.btc_actual + ' BTC (minus fee) from ' + job.address + " to seller's address " + seller.address)
         if (seller === false || !seller.address) {
           console.log('seller problem, skip')
           return callback(null, false)
         }
 
-        blockchain.create_transaction(seller.address, resp.btc_actual - 0.0002, 0.0002, job.WIF, function (transaction) {
-          blockchain.broadcast_transaction(transaction, function (result) {
+        blockchain.createTransaction(seller.address, resp.btc_actual - 0.0002, 0.0002, job.WIF, function (transaction) {
+          blockchain.broadcastTransaction(transaction, function (result) {
             if (!result.error) {
               job.processed = 'paid_and_sweeped'
             } else {
@@ -94,7 +94,7 @@ function saveJobResults (json, callback) {
   if (json === false) {
     return callback(null, false)
   } // пробрасываем чтоб waterfall доходил до логического конца
-  storage.save_job_results(json, function (error, response) {
+  storage.saveJobResults(json, function (error, response) {
     if (!error && response.statusCode === 201) {
       return callback(null)
     } else {

@@ -7,18 +7,18 @@ var should = require('chai').should() // actually call the function
 describe('blockchain', function () {
   this.timeout(60000)
 
-  describe('broadcast_transaction()', function () {
+  describe('broadcastTransaction()', function () {
     it('should broadcast TX', function (done) {
       var blockchain = require('./../../models/blockchain')
       var callback = function (response) {
         should.exist(response.error) // because it is a bad tx
         done()
       }
-      blockchain.broadcast_transaction('0100000001e92c6788cd82f67ff2397e54e32c85820820a43bbe46884e340163ef3e6a7972000000006b483045022100bd0e50bc342d2473efa8f497afa3ab44485ad467f1d1ec90591a946a5a84a2fa02207aeeabc8bf2237efe250ab61257482d18458d15f999a0499737c47c4bfe21262012103feec0ddfb34f3ce433c5f35ce83424681530d92f2dfbc075f17ce7ccec799affffffffff02e8030000000000001976a914f7c6c1f9f6142107ed293c8fbf85fbc49eb5f1b988acb8820100000000001976a91493e7ac0f387105913d95ac49f9a904014e472e4188ac00000000', callback)
+      blockchain.broadcastTransaction('0100000001e92c6788cd82f67ff2397e54e32c85820820a43bbe46884e340163ef3e6a7972000000006b483045022100bd0e50bc342d2473efa8f497afa3ab44485ad467f1d1ec90591a946a5a84a2fa02207aeeabc8bf2237efe250ab61257482d18458d15f999a0499737c47c4bfe21262012103feec0ddfb34f3ce433c5f35ce83424681530d92f2dfbc075f17ce7ccec799affffffffff02e8030000000000001976a914f7c6c1f9f6142107ed293c8fbf85fbc49eb5f1b988acb8820100000000001976a91493e7ac0f387105913d95ac49f9a904014e472e4188ac00000000', callback)
     })
   })
 
-  describe('fetch_transactions_by_address()', function () {
+  describe('fetchTransactionsByAddress()', function () {
     it('should return TXs by address ', function (done) {
       var blockchain = require('./../../models/blockchain')
       var callback = function (txs) {
@@ -39,7 +39,7 @@ describe('blockchain', function () {
         txs[ind].out[0].spent_by.should.equal('3e073bbc9b8d35001ee3f2b290651e10648291076c323ef77faa9d8011a809a5')
         done()
       }
-      blockchain.fetch_transactions_by_address('1EV3s4SRFWJhyQG13nX9vvS2KjBwomJbYx', callback)
+      blockchain.fetchTransactionsByAddress('1EV3s4SRFWJhyQG13nX9vvS2KjBwomJbYx', callback)
     })
 
     it('should return all TXs', function (done) {
@@ -48,11 +48,11 @@ describe('blockchain', function () {
         expect(txs.length).to.be.above(100)
         done()
       }
-      blockchain.fetch_transactions_by_address('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa', callback)
+      blockchain.fetchTransactionsByAddress('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa', callback)
     })
   })
 
-  describe('get_address()', function () {
+  describe('getAddress()', function () {
     it('should return balances associated with this address ', function (done) {
       var blockchain = require('./../../models/blockchain')
       var callback = function (json) {
@@ -62,7 +62,7 @@ describe('blockchain', function () {
         assert.ok(json.btc_actual > 1)
         done()
       }
-      blockchain.get_address('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa', callback)
+      blockchain.getAddress('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa', callback)
     })
   })
 })

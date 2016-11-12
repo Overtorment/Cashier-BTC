@@ -11,11 +11,11 @@ var request = require('request')
 var bitcore = require('bitcore-lib')
 var config = require('../config')
 
-exports.get_document = function (docid, callback) {
-  return exports.get_address(docid, callback) // since atm it does exactly the same
+exports.getDocument = function (docid, callback) {
+  return exports.getAddress(docid, callback) // since atm it does exactly the same
 }
 
-exports.save_document = function (body, callback) {
+exports.saveDocument = function (body, callback) {
   request.post(config.couchdb, { json: body }, function (error, response, body) {
     if (error) {
       return callback(false, body)
@@ -24,7 +24,7 @@ exports.save_document = function (body, callback) {
   })
 }
 
-exports.get_address = function (address, callback) {
+exports.getAddress = function (address, callback) {
   request.get(config.couchdb + '/' + address, function (error, response, body) {
     if (error) {
       return callback(false, error)
@@ -34,7 +34,7 @@ exports.get_address = function (address, callback) {
   })
 }
 
-exports.get_seller = function (sellerId, callback) {
+exports.getSeller = function (sellerId, callback) {
   request.get(config.couchdb + '/' + sellerId, function (error, response, body) {
     if (error) {
       return callback(false, error)
@@ -44,7 +44,7 @@ exports.get_seller = function (sellerId, callback) {
   })
 }
 
-exports.save_address = function (body, callback) {
+exports.saveAddress = function (body, callback) {
   var privateKey = new bitcore.PrivateKey()
   var address = new bitcore.Address(privateKey.toPublicKey())
   body.WIF = privateKey.toWIF()
@@ -62,7 +62,7 @@ exports.save_address = function (body, callback) {
   })
 }
 
-exports.save_payout = function (body, callback) {
+exports.savePayout = function (body, callback) {
   body.processed = 'payout_done'
   body.timestamp = Math.floor(Date.now() / 1000)
   body.doctype = 'payout'
@@ -79,7 +79,7 @@ exports.save_payout = function (body, callback) {
   })
 }
 
-exports.save_seller = function (sellerId, callback) {
+exports.saveSeller = function (sellerId, callback) {
   var privateKey = new bitcore.PrivateKey()
   var address = new bitcore.Address(privateKey.toPublicKey())
   var data = {
@@ -101,7 +101,7 @@ exports.save_seller = function (sellerId, callback) {
   })
 }
 
-exports.get_unprocessed_adresses_younger_than = function (timestamp, callback) {
+exports.getUnprocessedAdressesYoungerThan = function (timestamp, callback) {
   // запрашиваем view кауча, по которому получаем необработанные задания
   request.get(config.couchdb + '/_design/address/_view/unprocessed_by_timestamp?startkey=' + timestamp + '&inclusive_end=true&limit=1&reduce=false&include_docs=true', function (error, response, body) {
     if (error) {
@@ -111,7 +111,7 @@ exports.get_unprocessed_adresses_younger_than = function (timestamp, callback) {
   })
 }
 
-exports.get_unpaid_adresses_younger_than = function (timestamp, callback) {
+exports.getUnpaidAdressesYoungerThan = function (timestamp, callback) {
   // запрашиваем view кауча, по которому получаем необработанные задания
   request.get(config.couchdb + '/_design/address/_view/unpaid_by_timestamp?startkey=' + timestamp + '&inclusive_end=true&limit=1&reduce=false&include_docs=true', function (error, response, body) {
     if (error) {
@@ -121,7 +121,7 @@ exports.get_unpaid_adresses_younger_than = function (timestamp, callback) {
   })
 }
 
-exports.get_paid_adresses_younger_than = function (timestamp, callback) {
+exports.getPaidAdressesYoungerThan = function (timestamp, callback) {
   // запрашиваем view кауча, по которому получаем необработанные задания
   request.get(config.couchdb + '/_design/address/_view/paid_by_timestamp?startkey=' + timestamp + '&inclusive_end=true&limit=1&reduce=false&include_docs=true', function (error, response, body) {
     if (error) {
@@ -131,7 +131,7 @@ exports.get_paid_adresses_younger_than = function (timestamp, callback) {
   })
 }
 
-exports.take_job = function (json, callback) {
+exports.takeJob = function (json, callback) {
   // помечаем и сохраняем обратно в БД
   json.processed = 'processing'
   request.put(config.couchdb + '/' + json._id,
@@ -140,7 +140,7 @@ exports.take_job = function (json, callback) {
   )
 }
 
-exports.save_job_results = function (json, callback) {
+exports.saveJobResults = function (json, callback) {
   request.put(config.couchdb + '/' + json._id,
     { 'json': json },
       callback

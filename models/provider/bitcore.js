@@ -121,6 +121,6 @@ function broadcastTransaction (txhex, callback) {
   req.end()
 }
 
-exports.fetch_transactions_by_address = fetchTransactionsByAddress
-exports.get_address = getAddress
-exports.broadcast_transaction = broadcastTransaction
+exports.fetchTransactionsByAddress = fetchTransactionsByAddress
+exports.getAddress = getAddress
+exports.broadcastTransaction = broadcastTransaction

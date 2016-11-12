@@ -53,9 +53,9 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
     'callback_url': decodeURIComponent(req.params.callback_url)
   }
 
-  storage.save_address(data, function (responseBody) {
+  storage.saveAddress(data, function (responseBody) {
     if (responseBody.ok === true) {
-      console.log(req.id, 'save_address()', JSON.stringify(data))
+      console.log(req.id, 'saveAddress()', JSON.stringify(data))
 
       var paymentInfo = {
         address: data.address,
@@ -72,10 +72,10 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
       }
 
       if (typeof sellers[req.params.seller] === 'undefined') { // seller is not in local cache
-        storage.get_seller(req.params.seller, function (responseBody) { // checking if seller's data in database
+        storage.getSeller(req.params.seller, function (responseBody) { // checking if seller's data in database
           console.log(req.id, 'checking seller existance...')
           if (typeof responseBody.error !== 'undefined') { // seller doesnt exist
-            storage.save_seller(req.params.seller, function (responseBody) { // creating seller
+            storage.saveSeller(req.params.seller, function (responseBody) { // creating seller
               console.log(req.id, 'seller doesnt exist. creating...')
               if (responseBody.ok === true) { // seller create success
                 console.log(req.id, 'seller create success')
@@ -95,15 +95,15 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
       } else { // seller is in local cache, no need to create it
         res.send(JSON.stringify(answer))
       }
-    } else { // save_address() failed
+    } else { // saveAddress() failed
       res.send(responseBody.error + ': ' + responseBody.reason)
     }
   })
 })
 
 router.get('/check_payment/:address', function (req, res) {
-  blockchain.get_address(req.params.address, function (resp) {
-    storage.get_address(req.params.address, function (json) {
+  blockchain.getAddress(req.params.address, function (resp) {
+    storage.getAddress(req.params.address, function (json) {
       if (json !== false && json.btc_to_ask) {
         var answer = {
           'btc_expected': json.btc_to_ask,
@@ -134,13 +134,13 @@ router.get('/payout/:seller/:amount/:currency/:address', function (req, res) {
 
   var btcToPay = Math.floor((req.params.amount / exchangeRate) * 100000000) / 100000000
 
-  storage.get_seller(req.params.seller, function (seller) { // checking if such seller exists
+  storage.getSeller(req.params.seller, function (seller) { // checking if such seller exists
     if (seller === false || typeof seller.error !== 'undefined') {
       return res.send(JSON.stringify({'error': 'no such seller'}))
     }
 
-    blockchain.create_transaction(req.params.address, btcToPay - 0.0001 /* fee */, 0.0001, seller.WIF, function (txhex) {
-      blockchain.broadcast_transaction(txhex, function (response) {
+    blockchain.createTransaction(req.params.address, btcToPay - 0.0001 /* fee */, 0.0001, seller.WIF, function (txhex) {
+      blockchain.broadcastTransaction(txhex, function (response) {
         if (typeof response.error !== 'undefined') { // error
           console.log(req.id, 'payout error:', response)
           return res.send(response)
@@ -153,7 +153,7 @@ router.get('/payout/:seller/:amount/:currency/:address', function (req, res) {
             'transaction_result': response,
             'to_address': req.params.address
           }
-          return storage.save_payout(data, function () { res.send(response) })
+          return storage.savePayout(data, function () { res.send(response) })
         }
       })
     })
@@ -161,12 +161,12 @@ router.get('/payout/:seller/:amount/:currency/:address', function (req, res) {
 })
 
 router.get('/get_seller_balance/:seller', function (req, res) {
-  storage.get_seller(req.params.seller, function (seller) { // checking if such seller exists
+  storage.getSeller(req.params.seller, function (seller) { // checking if such seller exists
     if (seller === false || typeof seller.error !== 'undefined') {
       console.log(req.id, 'no such seller')
       return res.send(JSON.stringify({'error': 'no such seller'}))
     }
-    blockchain.get_address(seller.address, function (resp) {
+    blockchain.getAddress(seller.address, function (resp) {
       var answer = {
         'btc_actual': resp.btc_actual,
         'btc_unconfirmed': resp.btc_unconfirmed
@@ -177,7 +177,7 @@ router.get('/get_seller_balance/:seller', function (req, res) {
 })
 
 router.get('/get_address_confirmed_balance/:address', function (req, res) {
-  blockchain.get_address(req.params.address, function (resp) {
+  blockchain.getAddress(req.params.address, function (resp) {
     return res.send(resp.btc_actual + '')
   })
 })

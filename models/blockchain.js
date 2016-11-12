@@ -11,7 +11,7 @@ var bitcore = require('bitcore-lib')
 
 var provider = require('../models/provider/bitcore')
 
-exports.create_transaction = function (toAddress, btcAmount, minerFee, WIF, callback) {
+exports.createTransaction = function (toAddress, btcAmount, minerFee, WIF, callback) {
   if (minerFee === false) minerFee = 0.0001
   var pk = new bitcore.PrivateKey.fromWIF(WIF) // eslint-disable-line new-cap
   var fromAddress = (pk.toPublicKey()).toAddress(bitcore.Networks.livenet)
@@ -19,7 +19,7 @@ exports.create_transaction = function (toAddress, btcAmount, minerFee, WIF, call
 
   var transaction = new bitcore.Transaction()
 
-  provider.fetch_transactions_by_address(fromAddress, function (txs) {
+  provider.fetchTransactionsByAddress(fromAddress, function (txs) {
     for (var i = 0, l = txs.length; i < l; i++) { // iterating all transactions on that address
       var out = false
 
@@ -51,8 +51,8 @@ exports.create_transaction = function (toAddress, btcAmount, minerFee, WIF, call
 
     callback(transaction)
   }) // end fetch transactions
-}//  end create_transaction
+}//  end createTransaction
 
-exports.get_address = provider.get_address
-exports.fetch_transactions_by_address = provider.fetch_transactions_by_address
-exports.broadcast_transaction = provider.broadcast_transaction
+exports.getAddress = provider.getAddress
+exports.fetchTransactionsByAddress = provider.fetchTransactionsByAddress
+exports.broadcastTransaction = provider.broadcastTransaction
