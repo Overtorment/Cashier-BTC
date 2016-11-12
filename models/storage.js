@@ -26,23 +26,23 @@ exports.save_document = function (body, callback) {
 }
 
 exports.get_address = function (address, callback) {
-  var protocol = config.couchdb.substr(0, 5) == 'https' ? https : http
+  var protocol = config.couchdb.substr(0, 5) === 'https' ? https : http
   protocol.get(config.couchdb + '/' + address, function (ret) {
     var json = ''
-			  ret.on('data', function (d) { json += d })
-			  ret.on('end', function () { return callback(JSON.parse(json)) })
+    ret.on('data', function (d) { json += d })
+    ret.on('end', function () { return callback(JSON.parse(json)) })
   }).on('error', function (e) {
     console.log(e)
     return callback(false)
   })
 }
 
-exports.get_seller = function (seller_id, callback) {
-  var protocol = config.couchdb.substr(0, 5) == 'https' ? https : http
-  protocol.get(config.couchdb + '/' + seller_id, function (ret) {
+exports.get_seller = function (sellerId, callback) {
+  var protocol = config.couchdb.substr(0, 5) === 'https' ? https : http
+  protocol.get(config.couchdb + '/' + sellerId, function (ret) {
     var json = ''
-			  ret.on('data', function (d) { json += d })
-			  ret.on('end', function () { return callback(JSON.parse(json)) })
+    ret.on('data', function (d) { json += d })
+    ret.on('end', function () { return callback(JSON.parse(json)) })
   }).on('error', function (e) {
     console.log(e)
     return callback(false)
@@ -50,20 +50,19 @@ exports.get_seller = function (seller_id, callback) {
 }
 
 exports.save_address = function (body, callback) {
-  var private_key = new bitcore.PrivateKey()
-  var address = new bitcore.Address(private_key.toPublicKey())
-  body.WIF = private_key.toWIF()
+  var privateKey = new bitcore.PrivateKey()
+  var address = new bitcore.Address(privateKey.toPublicKey())
+  body.WIF = privateKey.toWIF()
   body.address = address.toString()
-  body.private_key = private_key.toString()
-  body.public_key = private_key.toPublicKey().toString()
+  body.private_key = privateKey.toString()
+  body.public_key = privateKey.toPublicKey().toString()
   body.timestamp = Math.floor(Date.now() / 1000)
   body.doctype = 'address'
   body._id = body.address
   request.post(config.couchdb, { json: body }, function (error, response, body) {
     if (error) { console.log(body) }
     return callback(response.body)
-  }
-	)
+  })
 }
 
 exports.save_payout = function (body, callback) {
@@ -79,21 +78,20 @@ exports.save_payout = function (body, callback) {
     } else {
       return false
     }
-  }
-	)
+  })
 }
 
-exports.save_seller = function (seller_id, callback) {
-  var private_key = new bitcore.PrivateKey()
-  var address = new bitcore.Address(private_key.toPublicKey())
+exports.save_seller = function (sellerId, callback) {
+  var privateKey = new bitcore.PrivateKey()
+  var address = new bitcore.Address(privateKey.toPublicKey())
   var data = {
-    'WIF': private_key.toWIF(),
+    'WIF': privateKey.toWIF(),
     'address': address.toString(),
-    'private_key': private_key.toString(),
-    'public_key': private_key.toPublicKey().toString(),
+    'private_key': privateKey.toString(),
+    'public_key': privateKey.toPublicKey().toString(),
     'timestamp': Math.floor(Date.now() / 1000),
-    'seller': seller_id,
-    '_id': seller_id,
+    'seller': sellerId,
+    '_id': sellerId,
     'doctype': 'seller'
   }
 
@@ -102,53 +100,52 @@ exports.save_seller = function (seller_id, callback) {
       console.log(body)
     }
     return callback(response.body)
-  }
-	)
+  })
 }
 
 exports.get_unprocessed_adresses_younger_than = function (timestamp, callback) {
-	// запрашиваем view кауча, по которому получаем необработанные задания
-  var protocol = config.couchdb.substr(0, 5) == 'https' ? https : http
+  // запрашиваем view кауча, по которому получаем необработанные задания
+  var protocol = config.couchdb.substr(0, 5) === 'https' ? https : http
   protocol.get(config.couchdb + '/_design/address/_view/unprocessed_by_timestamp?startkey=' + timestamp + '&inclusive_end=true&limit=1&reduce=false&include_docs=true', function (ret) {
-		  var json = ''
-		  ret.on('data', function (d) { json += d })
-		  ret.on('end', function () { return callback(json) })
+    var json = ''
+    ret.on('data', function (d) { json += d })
+    ret.on('end', function () { return callback(json) })
   })
 }
 
 exports.get_unpaid_adresses_younger_than = function (timestamp, callback) {
-	// запрашиваем view кауча, по которому получаем необработанные задания
-  var protocol = config.couchdb.substr(0, 5) == 'https' ? https : http
+  // запрашиваем view кауча, по которому получаем необработанные задания
+  var protocol = config.couchdb.substr(0, 5) === 'https' ? https : http
   protocol.get(config.couchdb + '/_design/address/_view/unpaid_by_timestamp?startkey=' + timestamp + '&inclusive_end=true&limit=1&reduce=false&include_docs=true', function (ret) {
-		  var json = ''
-		  ret.on('data', function (d) { json += d })
-		  ret.on('end', function () { return callback(json) })
+    var json = ''
+    ret.on('data', function (d) { json += d })
+    ret.on('end', function () { return callback(json) })
   })
 }
 
 exports.get_paid_adresses_younger_than = function (timestamp, callback) {
-	// запрашиваем view кауча, по которому получаем необработанные задания
-  var protocol = config.couchdb.substr(0, 5) == 'https' ? https : http
+  // запрашиваем view кауча, по которому получаем необработанные задания
+  var protocol = config.couchdb.substr(0, 5) === 'https' ? https : http
   protocol.get(config.couchdb + '/_design/address/_view/paid_by_timestamp?startkey=' + timestamp + '&inclusive_end=true&limit=1&reduce=false&include_docs=true', function (ret) {
-		  var json = ''
-		  ret.on('data', function (d) { json += d })
-		  ret.on('end', function () { return callback(json) })
+    var json = ''
+    ret.on('data', function (d) { json += d })
+    ret.on('end', function () { return callback(json) })
   })
 }
 
 exports.take_job = function (json, callback) {
-	// помечаем и сохраняем обратно в БД
+  // помечаем и сохраняем обратно в БД
   json.processed = 'processing'
   request.put(config.couchdb + '/' + json._id,
-		{ 'json': json },
+    { 'json': json },
         callback
-	)
+  )
 }
 
 exports.save_job_results = function (json, callback) {
   request.put(config.couchdb + '/' + json._id,
-		{ 'json': json },
-        callback
-	)
+    { 'json': json },
+      callback
+  )
 }
 

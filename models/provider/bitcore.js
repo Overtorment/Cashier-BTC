@@ -8,12 +8,11 @@
  * */
 
 var config = require('../../config')
-var https = require('https')
 var http = require('http')
 var async = require('async')
 var querystring = require('querystring')
 
-function get_address (address, callback) {
+function getAddress (address, callback) {
   http.get('http://' + config.bitcore.host + ':' + config.bitcore.port + config.bitcore.base_path + '/addr/' + address + '?noTxList=1', function (res) {
     res.setEncoding('utf8')
     res.on('data', function (chunk) {
@@ -30,7 +29,7 @@ function get_address (address, callback) {
   })
 }
 
-function fetch_transactions_by_address (address, callback) {
+function fetchTransactionsByAddress (address, callback) {
   http.get('http://' + config.bitcore.host + ':' + config.bitcore.port + config.bitcore.base_path + '/txs/?address=' + address, function (ret) {
     var json = ''
     ret.on('data', function (d) { json += d })
@@ -38,13 +37,13 @@ function fetch_transactions_by_address (address, callback) {
       json = JSON.parse(json)
 
       if (json.pagesTotal > 1) {
-        var all_tx = []
+        var allTx = []
         var jobs = []
-        var jobs_c = []
+        var jobsC = []
         for (var c = 0; c < json.pagesTotal; c++) {
-          jobs_c.push(c)
+          jobsC.push(c)
           jobs.push(function (callback) {
-            var cc = jobs_c.pop()
+            var cc = jobsC.pop()
             http.get('http://' + config.bitcore.host + ':' + config.bitcore.port + config.bitcore.base_path + '/txs/?address=' + address + '&pageNum=' + cc, function (ret2) {
               var json2 = ''
               ret2.on('data', function (d2) { json2 += d2 })
@@ -57,19 +56,24 @@ function fetch_transactions_by_address (address, callback) {
         }
 
         async.parallel(jobs, function (err, results) {
-          for (var i = 0; i < results.length; i++) {
-            all_tx = all_tx.concat(results[i].txs)
+          if (err) {
+            console.log('bitcore: could not fetch transactions')
+            return callback(false)
           }
-          return callback(transform_txs(all_tx))
+
+          for (var i = 0; i < results.length; i++) {
+            allTx = allTx.concat(results[i].txs)
+          }
+          return callback(transformTxs(allTx))
         })
       } else {
-        return callback(transform_txs(json.txs))
+        return callback(transformTxs(json.txs))
       } // if
     })
   })
 }
 
-function transform_txs (txs) { // transforming in format expected by others
+function transformTxs (txs) { // transforming in format expected by others
   for (var i = 0, l = txs.length; i < l; i++) {
     txs[i].hash = txs[i].txid
     for (var ii = 0, ll = txs[i].vout.length; ii < ll; ii++) {
@@ -86,10 +90,10 @@ function transform_txs (txs) { // transforming in format expected by others
   return txs
 }
 
-function broadcast_transaction (txhex, callback) {
-  if (typeof txhex == 'object') txhex = txhex.uncheckedSerialize()
+function broadcastTransaction (txhex, callback) {
+  if (typeof txhex === 'object') txhex = txhex.uncheckedSerialize()
 
-  var post_data = querystring.stringify({
+  var postData = querystring.stringify({
     'rawtx': txhex
   })
 
@@ -100,7 +104,7 @@ function broadcast_transaction (txhex, callback) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      'Content-Length': Buffer.byteLength(post_data)
+      'Content-Length': Buffer.byteLength(postData)
     }
   }
 
@@ -113,10 +117,10 @@ function broadcast_transaction (txhex, callback) {
     })
   })
 
-  req.write(post_data)
+  req.write(postData)
   req.end()
 }
 
-exports.fetch_transactions_by_address = fetch_transactions_by_address
-exports.get_address = get_address
-exports.broadcast_transaction = broadcast_transaction
+exports.fetch_transactions_by_address = fetchTransactionsByAddress
+exports.get_address = getAddress
+exports.broadcast_transaction = broadcastTransaction

@@ -3,7 +3,7 @@
 var assert = require('assert')
 
 describe('storage', function () {
-  this.timeout(10000)
+  this.timeout(60000)
 
   describe('get_document()', function () {
     it('should return any db document', function (done) {

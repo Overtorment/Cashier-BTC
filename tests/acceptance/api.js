@@ -10,7 +10,7 @@ var expect = reRequire('chai').expect
 var path = require('path')
 
 describe('loading express', function () {
-  this.timeout(10000)
+  this.timeout(60000)
 
   var createdPayment = false
   var server

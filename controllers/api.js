@@ -14,55 +14,54 @@
  *
  */
 
-/* global btc_usd */
-/* global btc_eur */
+/* global btcUsd */
+/* global btcEur */
 /* global sellers:true */
 
-var express = require('express'),
-  router = express.Router(),
-  bitcore = require('bitcore-lib'),
-  qr = require('qr-image'),
-  config = require('../config'),
-  blockchain = require('../models/blockchain'),
-  storage = require('../models/storage')
+var express = require('express')
+var router = express.Router()
+var bitcore = require('bitcore-lib')
+var config = require('../config')
+var blockchain = require('../models/blockchain')
+var storage = require('../models/storage')
 
 router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callback_url', function (req, res) {
-  var exchange_rate, btc_to_ask
+  var exchangeRate, btcToAsk
 
   switch (req.params.currency) {
-    case 'USD': exchange_rate = btc_usd
+    case 'USD': exchangeRate = btcUsd
       break
-    case 'EUR': exchange_rate = btc_eur
+    case 'EUR': exchangeRate = btcEur
       break
-    case 'BTC': exchange_rate = 1
+    case 'BTC': exchangeRate = 1
       break
     default:
       return res.send('bad currency')
   }
 
-  btc_to_ask = Math.floor((req.params.expect / exchange_rate) * 100000000) / 100000000
+  btcToAsk = Math.floor((req.params.expect / exchangeRate) * 100000000) / 100000000
 
   var data = {
     'timestamp': Math.floor(Date.now() / 1000),
     'expect': req.params.expect,
     'currency': req.params.currency,
-    'exchange_rate': exchange_rate,
-    'btc_to_ask': btc_to_ask,
+    'exchange_rate': exchangeRate,
+    'btc_to_ask': btcToAsk,
     'message': req.params.message,
     'seller': req.params.seller,
     'customer': req.params.customer,
     'callback_url': decodeURIComponent(req.params.callback_url)
   }
 
-  storage.save_address(data, function (response_body) {
-    if (response_body.ok === true) {
+  storage.save_address(data, function (responseBody) {
+    if (responseBody.ok === true) {
       console.log(JSON.stringify(data))
 
       var paymentInfo = {
         address: data.address,
         message: req.params.message,
         label: req.params.message,
-        amount: Math.floor(btc_to_ask * 100000000) // satoshis
+        amount: Math.floor(btcToAsk * 100000000) // satoshis
       }
 
       var answer = {
@@ -72,13 +71,13 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
         'address': data.address
       }
 
-      if (typeof sellers[req.params.seller] == 'undefined') { // seller is not in local cache
-        storage.get_seller(req.params.seller, function (response_body) { // checking if seller's data in database
+      if (typeof sellers[req.params.seller] === 'undefined') { // seller is not in local cache
+        storage.get_seller(req.params.seller, function (responseBody) { // checking if seller's data in database
           console.log('checking seller existance...')
-          if (typeof response_body.error != 'undefined') { // seller doesnt exist
-            storage.save_seller(req.params.seller, function (response_body) { // creating seller
+          if (typeof responseBody.error !== 'undefined') { // seller doesnt exist
+            storage.save_seller(req.params.seller, function (responseBody) { // creating seller
               console.log('seller doesnt exist. creating...')
-              if (response_body.ok === true) { // seller create success
+              if (responseBody.ok === true) { // seller create success
                 console.log('seller create success')
                 sellers[req.params.seller] = 1
                 res.send(JSON.stringify(answer))
@@ -97,7 +96,7 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
         res.send(JSON.stringify(answer))
       }
     } else { // save_address() failed
-      res.send(response_body.error + ': ' + response_body.reason)
+      res.send(responseBody.error + ': ' + responseBody.reason)
     }
   })
 })
@@ -121,38 +120,38 @@ router.get('/check_payment/:address', function (req, res) {
 })
 
 router.get('/payout/:seller/:amount/:currency/:address', function (req, res) {
-  var exchange_rate
+  var exchangeRate
   switch (req.params.currency) {
-    case 'USD': exchange_rate = btc_usd
+    case 'USD': exchangeRate = btcUsd
       break
-    case 'EUR': exchange_rate = btc_eur
+    case 'EUR': exchangeRate = btcEur
       break
-    case 'BTC': exchange_rate = 1
+    case 'BTC': exchangeRate = 1
       break
     default:
       return res.send('bad currency')
   }
 
-  var btc_to_pay = Math.floor((req.params.amount / exchange_rate) * 100000000) / 100000000
+  var btcToPay = Math.floor((req.params.amount / exchangeRate) * 100000000) / 100000000
 
   storage.get_seller(req.params.seller, function (seller) { // checking if such seller exists
-    if (seller === false || typeof seller.error != 'undefined') {
+    if (seller === false || typeof seller.error !== 'undefined') {
       return res.send(JSON.stringify({'error': 'no such seller'}))
     }
 
-    blockchain.create_transaction(req.params.address, btc_to_pay - 0.0001 /* fee */, 0.0001, seller.WIF, function (txhex) {
+    blockchain.create_transaction(req.params.address, btcToPay - 0.0001 /* fee */, 0.0001, seller.WIF, function (txhex) {
       blockchain.broadcast_transaction(txhex, function (response) {
-        if (typeof response.error != 'undefined') { // error
+        if (typeof response.error !== 'undefined') { // error
           console.log('sent error:', response)
           return res.send(response)
         } else { // no error
           console.log('')
-          console.log('sent ' + btc_to_pay + ' from ' + req.params.seller + ' (' + seller.address + ')' + ' to ' + req.params.address)
+          console.log('sent ' + btcToPay + ' from ' + req.params.seller + ' (' + seller.address + ')' + ' to ' + req.params.address)
           console.log(response)
           console.log('')
           var data = {
             'seller': req.params.seller,
-            'btc': btc_to_pay,
+            'btc': btcToPay,
             'transaction_result': response,
             'to_address': req.params.address
           }
@@ -165,7 +164,7 @@ router.get('/payout/:seller/:amount/:currency/:address', function (req, res) {
 
 router.get('/get_seller_balance/:seller', function (req, res) {
   storage.get_seller(req.params.seller, function (seller) { // checking if such seller exists
-    if (seller === false || typeof seller.error != 'undefined') {
+    if (seller === false || typeof seller.error !== 'undefined') {
       return res.send(JSON.stringify({'error': 'no such seller'}))
     }
     blockchain.get_address(seller.address, function (resp) {
