@@ -9,67 +9,64 @@
 
 var config = require('../../config')
 var http = require('http')
+var request = require('request')
 var async = require('async')
 var querystring = require('querystring')
 var _ = require('lodash')
 
 function getAddress (address, callback) {
-  http.get('http://' + config.bitcore.host + ':' + config.bitcore.port + config.bitcore.base_path + '/addr/' + address + '?noTxList=1', function (res) {
-    res.setEncoding('utf8')
-    res.on('data', function (chunk) {
-      try {
-        var resp = JSON.parse(chunk)
-      } catch (e) {
-        return callback(false)
-      }
-      var ret = {}
-      ret.btc_actual = resp.balance
-      ret.btc_unconfirmed = resp.balance + resp.unconfirmedBalance
-      callback(ret)
-    })
+  request.get('http://' + config.bitcore.host + ':' + config.bitcore.port + config.bitcore.base_path + '/addr/' + address + '?noTxList=1', function (error, response, body) {
+    if (error) {
+      return callback(false, response)
+    }
+
+    var resp = JSON.parse(body)
+    var ret = {}
+    ret.btc_actual = resp.balance
+    ret.btc_unconfirmed = resp.balance + resp.unconfirmedBalance
+    callback(ret)
   })
 }
 
 function fetchTransactionsByAddress (address, callback) {
-  http.get('http://' + config.bitcore.host + ':' + config.bitcore.port + config.bitcore.base_path + '/txs/?address=' + address, function (ret) {
-    var json = ''
-    ret.on('data', function (d) { json += d })
-    ret.on('end', function () {
-      json = JSON.parse(json)
+  request.get('http://' + config.bitcore.host + ':' + config.bitcore.port + config.bitcore.base_path + '/txs/?address=' + address, function (error, response, body) {
+    if (error) {
+      return callback(false, response)
+    }
 
-      if (json.pagesTotal > 1) {
-        var allTx = []
-        var jobs = []
-        var jobsC = []
-        for (var c = 0; c < json.pagesTotal; c++) {
-          jobsC.push(c)
-          jobs.push(function (callback) {
-            var cc = jobsC.pop()
-            http.get('http://' + config.bitcore.host + ':' + config.bitcore.port + config.bitcore.base_path + '/txs/?address=' + address + '&pageNum=' + cc, function (ret2) {
-              var json2 = ''
-              ret2.on('data', function (d2) { json2 += d2 })
-              ret2.on('end', function () {
-                json2 = JSON.parse(json2)
-                callback(null, json2)
-              })
-            })
+    var json = JSON.parse(body)
+
+    if (json.pagesTotal > 1) {
+      var allTx = []
+      var jobs = []
+      var jobsC = []
+      for (var c = 0; c < json.pagesTotal; c++) {
+        jobsC.push(c)
+        jobs.push(function (callback) {
+          var cc = jobsC.pop()
+          request.get('http://' + config.bitcore.host + ':' + config.bitcore.port + config.bitcore.base_path + '/txs/?address=' + address + '&pageNum=' + cc, function (error2, response2, body2) {
+            if (error2) {
+              return callback(false, response2)
+            }
+            var json2 = JSON.parse(body2)
+            callback(null, json2)
           })
+        })
+      }
+
+      async.parallel(jobs, function (err, results) {
+        if (err) {
+          return callback(false, new Error('bitcore: could not fetch transactions'))
         }
 
-        async.parallel(jobs, function (err, results) {
-          if (err) {
-            return callback(false, new Error('bitcore: could not fetch transactions'))
-          }
-
-          for (var i = 0; i < results.length; i++) {
-            allTx = allTx.concat(results[i].txs)
-          }
-          return callback(transformTxs(allTx))
-        })
-      } else {
-        return callback(transformTxs(json.txs))
-      } // if
-    })
+        for (var i = 0; i < results.length; i++) {
+          allTx = allTx.concat(results[i].txs)
+        }
+        return callback(transformTxs(allTx))
+      })
+    } else {
+      return callback(transformTxs(json.txs))
+    } // if
   })
 }
 
