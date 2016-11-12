@@ -81,15 +81,16 @@ describe('loading express', function () {
             .expect(200, done)
   })
 
-    /* it.skip('responds to /payout/:seller/:amount/:currency/:address', function testSlash(done) {
-        request(server)
-            .get('/payout/testseller/0.66/BTC/1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa') // satoshi's address from block#0
-            .expect(function(res){
-                var json = JSON.parse(res.text);
-                should.exist(json.error); // not enough balance
-            })
-            .expect(200, done);
-    }); */
+  it('responds to /payout/:seller/:amount/:currency/:address', function testSlash (done) {
+    request(server)
+        .get('/payout/testseller/0.66/BTC/1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa') // satoshi's address from block#0
+        .expect(function (res) {
+          var json = JSON.parse(res.text)
+          should.exist(json.error) // not enough balance
+          expect(json.error.length > 0)
+        })
+        .expect(200, done)
+  })
 
   it('responds to /get_seller_balance/testseller', function (done) {
     request(server)

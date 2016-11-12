@@ -11,6 +11,7 @@ var config = require('../../config')
 var http = require('http')
 var async = require('async')
 var querystring = require('querystring')
+var _ = require('lodash')
 
 function getAddress (address, callback) {
   http.get('http://' + config.bitcore.host + ':' + config.bitcore.port + config.bitcore.base_path + '/addr/' + address + '?noTxList=1', function (res) {
@@ -110,8 +111,13 @@ function broadcastTransaction (txhex, callback) {
   var req = http.request(options, function (res) {
     res.setEncoding('utf8')
     res.on('data', function (chunk) {
-      if (chunk.indexOf('dust') !== -1) return callback({error: chunk})
-      chunk = JSON.parse(chunk)
+      if (chunk.indexOf('dust') !== -1) {
+        return callback({error: 'dust transaction'})
+      }
+      chunk = _.attempt(JSON.parse.bind(null, chunk))
+      if (_.isError(chunk)) {
+        return callback({error: chunk.message})
+      }
       callback(chunk)
     })
   })

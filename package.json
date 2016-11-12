@@ -15,6 +15,7 @@
     "body-parser": "*",
     "chai": "*",
     "express": "*",
+    "lodash": "^4.16.6",
     "mocha": "*",
     "morgan": "^1.7.0",
     "node-uuid": "^1.4.7",

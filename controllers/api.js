@@ -142,7 +142,7 @@ router.get('/payout/:seller/:amount/:currency/:address', function (req, res) {
     blockchain.create_transaction(req.params.address, btcToPay - 0.0001 /* fee */, 0.0001, seller.WIF, function (txhex) {
       blockchain.broadcast_transaction(txhex, function (response) {
         if (typeof response.error !== 'undefined') { // error
-          console.log(req.id, 'sent error:', JSON.stringify(response))
+          console.log(req.id, 'payout error:', response)
           return res.send(response)
         } else { // no error
           console.log(req.id, 'sent ' + btcToPay + ' from ' + req.params.seller + ' (' + seller.address + ')' + ' to ' + req.params.address)
