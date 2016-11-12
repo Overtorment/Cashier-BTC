@@ -19,10 +19,11 @@ exports.get_document = function (docid, callback) {
 
 exports.save_document = function (body, callback) {
   request.post(config.couchdb, { json: body }, function (error, response, body) {
-    if (error) { console.log(body) }
+    if (error) {
+      return callback(false, body)
+    }
     return callback(response.body)
-  }
-    )
+  })
 }
 
 exports.get_address = function (address, callback) {
@@ -32,8 +33,7 @@ exports.get_address = function (address, callback) {
     ret.on('data', function (d) { json += d })
     ret.on('end', function () { return callback(JSON.parse(json)) })
   }).on('error', function (e) {
-    console.log(e)
-    return callback(false)
+    return callback(false, e)
   })
 }
 
@@ -44,8 +44,7 @@ exports.get_seller = function (sellerId, callback) {
     ret.on('data', function (d) { json += d })
     ret.on('end', function () { return callback(JSON.parse(json)) })
   }).on('error', function (e) {
-    console.log(e)
-    return callback(false)
+    return callback(false, e)
   })
 }
 
@@ -60,7 +59,9 @@ exports.save_address = function (body, callback) {
   body.doctype = 'address'
   body._id = body.address
   request.post(config.couchdb, { json: body }, function (error, response, body) {
-    if (error) { console.log(body) }
+    if (error) {
+      return callback(false, body)
+    }
     return callback(response.body)
   })
 }
@@ -70,11 +71,12 @@ exports.save_payout = function (body, callback) {
   body.timestamp = Math.floor(Date.now() / 1000)
   body.doctype = 'payout'
   request.post(config.couchdb, { json: body }, function (error, response, body) {
-    if (error) {
-      console.log(body)
-    }
     if (callback) {
-      return callback(response.body)
+      if (error) {
+        return callback(false, body)
+      } else {
+        return callback(response.body)
+      }
     } else {
       return false
     }
@@ -97,7 +99,7 @@ exports.save_seller = function (sellerId, callback) {
 
   request.post(config.couchdb, { json: data }, function (error, response, body) {
     if (error) {
-      console.log(body)
+      return callback(false, body)
     }
     return callback(response.body)
   })
