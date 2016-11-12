@@ -42,8 +42,6 @@ describe('loading express', function () {
               should.exist(json.link)
               should.exist(json.qr)
               should.exist(json.qr_simple)
-              console.log(json.qr)
-              console.log(json.qr_simple)
             })
             .expect(200, done)
   })

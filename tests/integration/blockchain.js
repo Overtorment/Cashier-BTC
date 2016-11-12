@@ -34,7 +34,6 @@ describe('blockchain', function () {
         txs[ind].out[0].script.should.equal('76a91493e7ac0f387105913d95ac49f9a904014e472e4188ac')
         should.exist(txs[ind].out[0].n)
         txs[ind].out[0].n.should.equal(0)
-        console.log(txs[ind].out[0])
         txs[ind].out[0].value.should.equal(100000)
         should.exist(txs[ind].out[0].spent_by)
         txs[ind].out[0].spent_by.should.equal('3e073bbc9b8d35001ee3f2b290651e10648291076c323ef77faa9d8011a809a5')
