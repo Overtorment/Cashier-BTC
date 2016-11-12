@@ -103,4 +103,42 @@ describe('storage', function () {
       })
     })
   })
+
+  describe('save_address() && get_unprocessed_adresses_younger_than()', function () {
+    it('saves unprocessed address to database and fetches it back', function (done) {
+      var storage = require('./../../models/storage')
+      var data = {
+        'expect': 1,
+        'currency': 'BTC',
+        'exchange_rate': 1,
+        'btc_to_ask': 1,
+        'message': 'message',
+        'seller': 'testseller',
+        'customer': 'testuser',
+        'callback_url': 'http://fu.bar'
+      }
+
+      storage.save_address(data, function (response) {
+        assert.ok(response.ok)
+        assert.ok(response.id)
+
+        // now fetching this document back
+        storage.get_address(response.id, function (data2) {
+          if (!data2) throw new Error()
+          assert.equal(data2._id, response.id)
+          assert.ok(data2.timestamp)
+          assert.equal(data2.doctype, 'address')
+
+          // now, testing if get_unprocessed_adresses_younger_than() works
+          storage.get_unprocessed_adresses_younger_than(data2.timestamp, function (data3) {
+            if (!data3) throw new Error()
+            data3 = JSON.parse(data3)
+            data3 = data3['rows'][0]['doc']
+            assert.equal(data3._id, response.id) // its the same document we saved
+            done()
+          })
+        })
+      })
+    })
+  })
 })

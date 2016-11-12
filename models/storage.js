@@ -7,8 +7,6 @@
  * Author: Igor Korsakov
  * */
 
-var https = require('https')
-var http = require('http')
 var request = require('request')
 var bitcore = require('bitcore-lib')
 var config = require('../config')
@@ -27,24 +25,22 @@ exports.save_document = function (body, callback) {
 }
 
 exports.get_address = function (address, callback) {
-  var protocol = config.couchdb.substr(0, 5) === 'https' ? https : http
-  protocol.get(config.couchdb + '/' + address, function (ret) {
-    var json = ''
-    ret.on('data', function (d) { json += d })
-    ret.on('end', function () { return callback(JSON.parse(json)) })
-  }).on('error', function (e) {
-    return callback(false, e)
+  request.get(config.couchdb + '/' + address, function (error, response, body) {
+    if (error) {
+      return callback(false, error)
+    }
+
+    callback(JSON.parse(body))
   })
 }
 
 exports.get_seller = function (sellerId, callback) {
-  var protocol = config.couchdb.substr(0, 5) === 'https' ? https : http
-  protocol.get(config.couchdb + '/' + sellerId, function (ret) {
-    var json = ''
-    ret.on('data', function (d) { json += d })
-    ret.on('end', function () { return callback(JSON.parse(json)) })
-  }).on('error', function (e) {
-    return callback(false, e)
+  request.get(config.couchdb + '/' + sellerId, function (error, response, body) {
+    if (error) {
+      return callback(false, error)
+    }
+
+    return callback(JSON.parse(body))
   })
 }
 
@@ -107,31 +103,31 @@ exports.save_seller = function (sellerId, callback) {
 
 exports.get_unprocessed_adresses_younger_than = function (timestamp, callback) {
   // запрашиваем view кауча, по которому получаем необработанные задания
-  var protocol = config.couchdb.substr(0, 5) === 'https' ? https : http
-  protocol.get(config.couchdb + '/_design/address/_view/unprocessed_by_timestamp?startkey=' + timestamp + '&inclusive_end=true&limit=1&reduce=false&include_docs=true', function (ret) {
-    var json = ''
-    ret.on('data', function (d) { json += d })
-    ret.on('end', function () { return callback(json) })
+  request.get(config.couchdb + '/_design/address/_view/unprocessed_by_timestamp?startkey=' + timestamp + '&inclusive_end=true&limit=1&reduce=false&include_docs=true', function (error, response, body) {
+    if (error) {
+      return callback(false, error)
+    }
+    return callback(body)
   })
 }
 
 exports.get_unpaid_adresses_younger_than = function (timestamp, callback) {
   // запрашиваем view кауча, по которому получаем необработанные задания
-  var protocol = config.couchdb.substr(0, 5) === 'https' ? https : http
-  protocol.get(config.couchdb + '/_design/address/_view/unpaid_by_timestamp?startkey=' + timestamp + '&inclusive_end=true&limit=1&reduce=false&include_docs=true', function (ret) {
-    var json = ''
-    ret.on('data', function (d) { json += d })
-    ret.on('end', function () { return callback(json) })
+  request.get(config.couchdb + '/_design/address/_view/unpaid_by_timestamp?startkey=' + timestamp + '&inclusive_end=true&limit=1&reduce=false&include_docs=true', function (error, response, body) {
+    if (error) {
+      return callback(false, error)
+    }
+    return callback(body)
   })
 }
 
 exports.get_paid_adresses_younger_than = function (timestamp, callback) {
   // запрашиваем view кауча, по которому получаем необработанные задания
-  var protocol = config.couchdb.substr(0, 5) === 'https' ? https : http
-  protocol.get(config.couchdb + '/_design/address/_view/paid_by_timestamp?startkey=' + timestamp + '&inclusive_end=true&limit=1&reduce=false&include_docs=true', function (ret) {
-    var json = ''
-    ret.on('data', function (d) { json += d })
-    ret.on('end', function () { return callback(json) })
+  request.get(config.couchdb + '/_design/address/_view/paid_by_timestamp?startkey=' + timestamp + '&inclusive_end=true&limit=1&reduce=false&include_docs=true', function (error, response, body) {
+    if (error) {
+      return callback(false, error)
+    }
+    return callback(body)
   })
 }
 

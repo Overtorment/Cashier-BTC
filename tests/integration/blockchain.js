@@ -7,7 +7,7 @@ var should = require('chai').should() // actually call the function
 describe('blockchain', function () {
   this.timeout(60000)
 
-  describe('#broadcast_transaction()', function () {
+  describe('broadcast_transaction()', function () {
     it('should broadcast TX', function (done) {
       var blockchain = require('./../../models/blockchain')
       var callback = function (response) {
@@ -18,7 +18,7 @@ describe('blockchain', function () {
     })
   })
 
-  describe('#fetch_transactions_by_address()', function () {
+  describe('fetch_transactions_by_address()', function () {
     it('should return TXs by address ', function (done) {
       var blockchain = require('./../../models/blockchain')
       var callback = function (txs) {
@@ -52,7 +52,7 @@ describe('blockchain', function () {
     })
   })
 
-  describe('#get_address()', function () {
+  describe('get_address()', function () {
     it('should return balances associated with this address ', function (done) {
       var blockchain = require('./../../models/blockchain')
       var callback = function (json) {

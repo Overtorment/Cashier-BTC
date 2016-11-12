@@ -5,7 +5,7 @@ var expect = require('chai').expect
 var should = require('chai').should() // eslint-disable-line no-unused-vars
 
 describe('blockchain', function () {
-  describe('#create_transaction()', function () {
+  describe('create_transaction()', function () {
     it('should return valid TX hex', function (done) {
       var blockchain = rewire('./../../models/blockchain')
       blockchain.__set__('provider', { fetch_transactions_by_address: require('../../tests/stubs').fetch_transactions_by_address })
