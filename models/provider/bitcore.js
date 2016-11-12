@@ -8,7 +8,6 @@
  * */
 
 var config = require('../../config')
-var http = require('http')
 var request = require('request')
 var async = require('async')
 var querystring = require('querystring')
@@ -95,9 +94,7 @@ function broadcastTransaction (txhex, callback) {
   })
 
   var options = {
-    host: config.bitcore.host,
-    port: config.bitcore.port,
-    path: config.bitcore.base_path + '/tx/send',
+    url: config.bitcore.host + ':' + config.bitcore.port + config.bitcore.base_path + '/tx/send',
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -105,18 +102,19 @@ function broadcastTransaction (txhex, callback) {
     }
   }
 
-  var req = http.request(options, function (res) {
-    res.setEncoding('utf8')
-    res.on('data', function (chunk) {
-      if (chunk.indexOf('dust') !== -1) {
-        return callback({error: 'dust transaction'})
-      }
-      chunk = _.attempt(JSON.parse.bind(null, chunk))
-      if (_.isError(chunk)) {
-        return callback({error: chunk.message})
-      }
-      callback(chunk)
-    })
+  var req = request(options, function (error, response, chunk) {
+    if (error) {
+      return callback({error: error.toString()})
+    }
+
+    if (chunk.indexOf('dust') !== -1) {
+      return callback({error: 'dust transaction'})
+    }
+    chunk = _.attempt(JSON.parse.bind(null, chunk))
+    if (_.isError(chunk)) {
+      return callback({error: chunk.message})
+    }
+    callback(chunk)
   })
 
   req.write(postData)
