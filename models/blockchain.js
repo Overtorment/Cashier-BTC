@@ -26,7 +26,6 @@ exports.create_transaction = function (toAddress, btcAmount, minerFee, WIF, call
       for (var ii = 0, ll = txs[i].out.length; ii < ll; ii++) { // iterating all outs on transaction to find then one we own (fromAddress)
         if (txs[i].out[ii].addr === fromAddress.toString() && typeof txs[i].out[ii].spent_by === 'undefined') {
           out = txs[i].out[ii]
-                    // console.log("+1 unspent out", out);
         }
       } // end for
 

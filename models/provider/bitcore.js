@@ -57,8 +57,7 @@ function fetchTransactionsByAddress (address, callback) {
 
         async.parallel(jobs, function (err, results) {
           if (err) {
-            console.log('bitcore: could not fetch transactions')
-            return callback(false)
+            return callback(false, new Error('bitcore: could not fetch transactions'))
           }
 
           for (var i = 0; i < results.length; i++) {
