@@ -16,6 +16,8 @@
     "chai": "*",
     "express": "*",
     "mocha": "*",
+    "morgan": "^1.7.0",
+    "node-uuid": "^1.4.7",
     "qr-image": "*",
     "request": "*",
     "rewire": "*",

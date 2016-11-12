@@ -9,7 +9,21 @@
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 var express = require('express')
+var morgan = require('morgan')
+var uuid = require('node-uuid')
+
+morgan.token('id', function getId (req) {
+  return req.id
+})
+
 var app = express()
+
+app.use(function (req, res, next) {
+  req.id = uuid.v4()
+  next()
+})
+app.use(morgan(':id :remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"'))
+
 app.set('trust proxy', 'loopback')
 
 var bodyParser = require('body-parser')
