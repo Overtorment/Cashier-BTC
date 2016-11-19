@@ -1,25 +1,29 @@
 {
   "name": "Cashier-BTC",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Self-hosted bitcoin payment gateway",
   "main": "cashier-btc.js",
   "repository": "https://github.com/Overtorment/Cashier-BTC",
   "license": "WTFPL",
   "author": "Igor Korsakov",
-  "scripts" : {
-    "test" : "mocha tests"
+  "scripts": {
+    "test": "./node_modules/.bin/standard && ./node_modules/.bin/mocha tests/*"
   },
   "dependencies": {
     "async": "*",
-    "express": "*",
-    "request": "*",
-    "bitcore-lib": "*",
-    "body-parser" : "*",
-    "qr-image" : "*",
-    "rewire": "*",
+    "bitcore-lib": "0.13.13",
+    "body-parser": "*",
     "chai": "*",
+    "express": "*",
+    "lodash": "^4.16.6",
     "mocha": "*",
-    "sinon" : "*",
-    "supertest" : "*"
+    "morgan": "^1.7.0",
+    "node-uuid": "^1.4.7",
+    "qr-image": "*",
+    "request": "*",
+    "rewire": "*",
+    "sinon": "*",
+    "standard": "^8.4.0",
+    "supertest": "*"
   }
 }

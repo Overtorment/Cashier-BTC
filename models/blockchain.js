@@ -7,61 +7,52 @@
  * Author: Igor Korsakov
  * */
 
-var bitcore = require('bitcore-lib');
-var config = require('../config');
+var bitcore = require('bitcore-lib')
 
-var provider = require("../models/provider/bitcore");
+var provider = require('../models/provider/bitcore')
 
-exports.create_transaction = function(to_address, btc_amount, miner_fee, WIF, callback){
-    if (miner_fee === false) miner_fee = 0.0001;
-    var pk = new bitcore.PrivateKey.fromWIF(WIF);
-    var from_address = (pk.toPublicKey()).toAddress(bitcore.Networks.livenet);
-    var total_satoshis = 0;
+exports.createTransaction = function (toAddress, btcAmount, minerFee, WIF, callback) {
+  if (minerFee === false) minerFee = 0.0001
+  var pk = new bitcore.PrivateKey.fromWIF(WIF) // eslint-disable-line new-cap
+  var fromAddress = (pk.toPublicKey()).toAddress(bitcore.Networks.livenet)
+  var totalSatoshis = 0
 
-    var transaction = new bitcore.Transaction();
+  var transaction = new bitcore.Transaction()
 
-    provider.fetch_transactions_by_address(from_address, function(txs){
+  provider.fetchTransactionsByAddress(fromAddress, function (txs) {
+    for (var i = 0, l = txs.length; i < l; i++) { // iterating all transactions on that address
+      var out = false
 
-        for (var i=0, l=txs.length; i<l; i++) { // iterating all transactions on that address
-            var out = false;
+      for (var ii = 0, ll = txs[i].out.length; ii < ll; ii++) { // iterating all outs on transaction to find then one we own (fromAddress)
+        if (txs[i].out[ii].addr === fromAddress.toString() && typeof txs[i].out[ii].spent_by === 'undefined') {
+          out = txs[i].out[ii]
+        }
+      } // end for
 
-            for (var ii=0, ll=txs[i].out.length; ii<ll; ii++) { // iterating all outs on transaction to find then one we own (from_address)
-                if (txs[i].out[ii].addr == from_address && typeof txs[i].out[ii].spent_by === 'undefined') {
-                    out = txs[i].out[ii];
-                    //console.log("+1 unspent out", out);
-                }
-            } // end for
+      if (!out) continue
 
-            if (!out) continue;
+      transaction.from({ 'address': fromAddress,
+                 'txid': txs[i].hash,
+                 'vout': out.n,
+                 'scriptPubKey': out.script,
+                 'satoshis': out.value
+            })
 
-            transaction.from({ "address":from_address
-                ,"txid" : txs[i].hash
-                ,"vout" : out.n
-                ,"scriptPubKey": out.script
-                ,"satoshis" : out.value
-            });
+      totalSatoshis += out.value
 
-            total_satoshis += out.value;
+      if (totalSatoshis >= (parseInt(btcAmount * 100000000) + parseInt(minerFee * 100000000))) break // we have enough outs
+    } // end for
 
-            if (total_satoshis >= (parseInt(btc_amount*100000000) + parseInt(miner_fee * 100000000))) break; // we have enough outs
+    transaction
+                .to(toAddress, parseInt(btcAmount * 100000000))
+                .fee(parseInt(minerFee * 100000000))
+                .change(fromAddress)
+                .sign(pk)
 
-        } // end for
+    callback(transaction)
+  }) // end fetch transactions
+}//  end createTransaction
 
-        transaction
-                .to(to_address, parseInt(btc_amount*100000000))
-                .fee(parseInt(miner_fee * 100000000))
-                .change(from_address)
-                .sign(pk);
-
-        callback(transaction);
-
-    }); // end fetch transactions
-
-};//  end create_transaction
-
-
-
-
-exports.get_address = provider.get_address;
-exports.fetch_transactions_by_address = provider.fetch_transactions_by_address;
-exports.broadcast_transaction = provider.broadcast_transaction;
+exports.getAddress = provider.getAddress
+exports.fetchTransactionsByAddress = provider.fetchTransactionsByAddress
+exports.broadcastTransaction = provider.broadcastTransaction

@@ -1,6 +1,8 @@
 Cashier-BTC
 ===================
 
+[![JavaScript Style Guide](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
+
 Self-hosted Node.js Bitcoin payment gateway. Provides REST API for anyone who wants to accept bitcoin.
 Request payments (invoicing), check payments (whether invoice is paid), receive callbacks if payment is made.
 Aggregate funds on final (aggregational) address.
@@ -8,7 +10,7 @@ Depends on Bitcore, Couchdb for storage.
 
 * Simple
 * Transactions are signed locally. No private keys leak
-* Battle-tested in production: 30+ BTC turnover already
+* Battle-tested in production: 50+ BTC turnover already
 
 
 Installation
