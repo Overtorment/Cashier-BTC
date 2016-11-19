@@ -94,7 +94,7 @@ function broadcastTransaction (txhex, callback) {
   })
 
   var options = {
-    url: config.bitcore.host + ':' + config.bitcore.port + config.bitcore.base_path + '/tx/send',
+    url: 'http://' + config.bitcore.host + ':' + config.bitcore.port + config.bitcore.base_path + '/tx/send',
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
