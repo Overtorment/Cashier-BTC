@@ -9,7 +9,7 @@ var should = reRequire('chai').should() // actually call the function
 var expect = reRequire('chai').expect
 var path = require('path')
 
-describe('loading express', function () {
+describe('acceptance - loading express', function () {
   this.timeout(60000)
 
   var createdPayment = false

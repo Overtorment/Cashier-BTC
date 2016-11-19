@@ -114,7 +114,7 @@ exports.fetchTransactionsByAddress = function (address, callback) {
     )
 }
 
-exports.fetch_transactions_by_address2 = function (address, callback) {
+exports.fetchTransactionsByAddress2 = function (address, callback) {
   callback(
         [{
           'block_hash': '0000000000000000092d8faa07191b53d5933e7cdea02656d5143a18ceeb0d42',

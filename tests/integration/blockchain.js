@@ -4,7 +4,7 @@ var assert = require('assert')
 var expect = require('chai').expect
 var should = require('chai').should() // actually call the function
 
-describe('blockchain', function () {
+describe('integration - blockchain', function () {
   this.timeout(60000)
 
   describe('broadcastTransaction()', function () {

@@ -4,7 +4,7 @@ var rewire = require('rewire')
 var expect = require('chai').expect
 var should = require('chai').should() // eslint-disable-line no-unused-vars
 
-describe('blockchain', function () {
+describe('unit - blockchain', function () {
   describe('createTransaction()', function () {
     it('should return valid TX hex', function (done) {
       var blockchain = rewire('./../../models/blockchain')
@@ -18,7 +18,7 @@ describe('blockchain', function () {
 
     it('should correctly consider all used inputs', function (done) {
       var blockchain = rewire('./../../models/blockchain')
-      blockchain.__set__('provider', { fetchTransactionsByAddress: require('../../tests/stubs').fetch_transactions_by_address2 })
+      blockchain.__set__('provider', { fetchTransactionsByAddress: require('../../tests/stubs').fetchTransactionsByAddress2 })
       var callback = function (transaction) {
         expect(transaction.toObject().outputs.length).to.equal(2)
         expect(transaction.toObject().outputs[0].satoshis).to.equal(1000)

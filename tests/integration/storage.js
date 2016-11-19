@@ -2,7 +2,7 @@
 
 var assert = require('assert')
 
-describe('storage', function () {
+describe('integration - storage', function () {
   this.timeout(60000)
 
   describe('getDocument()', function () {
