@@ -129,7 +129,7 @@ router.get('/payout/:seller/:amount/:currency/:address', function (req, res) {
     case 'BTC': exchangeRate = 1
       break
     default:
-      return res.send('bad currency')
+      return res.send(JSON.stringify({'error': 'bad currency'}))
   }
 
   var btcToPay = Math.floor((req.params.amount / exchangeRate) * 100000000) / 100000000

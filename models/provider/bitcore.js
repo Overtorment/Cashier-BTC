@@ -47,15 +47,19 @@ function fetchTransactionsByAddress (address, callback) {
             if (error2) {
               return callback(false, response2)
             }
-            var json2 = JSON.parse(body2)
+            try {
+              var json2 = JSON.parse(body2)
+            } catch (err) {
+              return callback(err.message + ':' + body2)
+            }
             callback(null, json2)
           })
         })
       }
 
-      async.parallel(jobs, function (err, results) {
+      async.parallelLimit(jobs, 5, function (err, results) {
         if (err) {
-          return callback(false, new Error('bitcore: could not fetch transactions'))
+          return callback(false, new Error('bitcore: could not fetch transactions. ' + err))
         }
 
         for (var i = 0; i < results.length; i++) {

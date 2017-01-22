@@ -21,7 +21,7 @@ describe('integration - blockchain', function () {
   describe('fetchTransactionsByAddress()', function () {
     it('should return TXs by address ', function (done) {
       var blockchain = require('./../../models/blockchain')
-      var callback = function (txs) {
+      var callback = function (txs, error) {
         var ind = txs.length - 1
         should.exist(txs[ind])
         should.exist(txs[ind].hash)
@@ -44,7 +44,8 @@ describe('integration - blockchain', function () {
 
     it('should return all TXs', function (done) {
       var blockchain = require('./../../models/blockchain')
-      var callback = function (txs) {
+      var callback = function (txs, error) {
+        assert.ok(!error, error)
         expect(txs.length).to.be.above(100)
         done()
       }
