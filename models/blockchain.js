@@ -32,11 +32,11 @@ exports.createTransaction = function (toAddress, btcAmount, minerFee, WIF, callb
       if (!out) continue
 
       transaction.from({ 'address': fromAddress,
-                 'txid': txs[i].hash,
-                 'vout': out.n,
-                 'scriptPubKey': out.script,
-                 'satoshis': out.value
-            })
+        'txid': txs[i].hash,
+        'vout': out.n,
+        'scriptPubKey': out.script,
+        'satoshis': out.value
+      })
 
       totalSatoshis += out.value
 
