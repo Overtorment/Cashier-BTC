@@ -19,7 +19,11 @@ function getAddress (address, callback) {
       return callback(false, response)
     }
 
-    var resp = JSON.parse(body)
+    try {
+      var resp = JSON.parse(body)
+    } catch (err) {
+      return callback(false)
+    }
     var ret = {}
     ret.btc_actual = resp.balance
     ret.btc_unconfirmed = resp.balance + resp.unconfirmedBalance
