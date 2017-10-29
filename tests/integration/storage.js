@@ -1,13 +1,13 @@
 /* global describe, it */
 
-var assert = require('assert')
+let assert = require('assert')
 
 describe('integration - storage', function () {
   this.timeout(60000)
 
   describe('getDocument()', function () {
     it('should return any db document', function (done) {
-      var storage = require('./../../models/storage')
+      let storage = require('./../../models/storage')
       storage.getDocument('_design/address', function (data) {
         if (!data) throw new Error()
         assert.equal(data._id, '_design/address')
@@ -26,8 +26,8 @@ describe('integration - storage', function () {
 
   describe('saveAddress() && getAddress()', function () {
     it('should save document with address data, and get it back', function (done) {
-      var storage = require('./../../models/storage')
-      var data = {
+      let storage = require('./../../models/storage')
+      let data = {
         'expect': 1,
         'currency': 'BTC',
         'exchange_rate': 1,
@@ -64,8 +64,8 @@ describe('integration - storage', function () {
 
   describe('savePayout()', function () {
     it('saves document with details on the payout', function (done) {
-      var storage = require('./../../models/storage')
-      var data = {}
+      let storage = require('./../../models/storage')
+      let data = {}
 
       storage.savePayout(data, function (response) {
         assert.ok(response.ok)
@@ -84,8 +84,8 @@ describe('integration - storage', function () {
 
   describe('saveSeller()', function () {
     it('saves document with details on the seller', function (done) {
-      var storage = require('./../../models/storage')
-      var sellerId = require('crypto').createHash('md5').update(Math.random().toString()).digest('hex')
+      let storage = require('./../../models/storage')
+      let sellerId = require('crypto').createHash('md5').update(Math.random().toString()).digest('hex')
 
       storage.saveSeller(sellerId, function (response) {
         // now fetching this document back
@@ -106,8 +106,8 @@ describe('integration - storage', function () {
 
   describe('saveAddress() && getUnprocessedAdressesYoungerThan()', function () {
     it('saves unprocessed address to database and fetches it back', function (done) {
-      var storage = require('./../../models/storage')
-      var data = {
+      let storage = require('./../../models/storage')
+      let data = {
         'expect': 1,
         'currency': 'BTC',
         'exchange_rate': 1,

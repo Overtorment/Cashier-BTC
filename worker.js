@@ -3,29 +3,20 @@
  * -----------
  * Self-hosted bitcoin payment gateway
  *
- * License: WTFPL
- * Author: Igor Korsakov
- * */
+ * https://github.com/Overtorment/Cashier-BTC
+ *
+ **/
 
 /*
-  этот воркер обходит все адреса, помечает оплаченые
-  и выстреливает коллбеки
+  worker iterates through all addresses, marks paid and fires callbacks
 */
-var request = require('request')
-var async = require('async')
-var storage = require('./models/storage')
-var blockchain = require('./models/blockchain')
-var config = require('./config')
+let request = require('request')
+let async = require('async')
+let storage = require('./models/storage')
+let blockchain = require('./models/blockchain')
+let config = require('./config')
 
-var mode = 'unprocessed'  // can be also 'unpaid'
-/*
-  there are two modes. in one mode (unprocessed) we search for all documents  where  doc.processed=='unprocessed'  or  doc.processed is not set.
-  in case if address is not paid, we set doc.processed to 'unpaid'.
-  once we run out of 'unprocessed' documents, we do the same for all 'unpaid' documents, marking them 'unprocessed'.
-  thus, it makes an infinite loop for all matching documents
-*/
-
-var iteration = function (next) { // тело воркера
+let iteration = function (next) { // тело воркера
   async.waterfall([
     getJob,
     prepareJob,
@@ -47,12 +38,9 @@ async.forever(
 )
 
 function getJob (callback) {
-  if (mode === 'unprocessed') {
-    storage.getUnprocessedAdressesYoungerThan(Math.floor(Date.now() / 1000) - config.process_unpaid_for_period, function (json) { return callback(null, json) })
-  }
-  if (mode === 'unpaid') {
-    storage.getUnpaidAdressesYoungerThan(Math.floor(Date.now() / 1000) - config.process_unpaid_for_period, function (json) { return callback(null, json) })
-  }
+  storage.getUnprocessedAdressesYoungerThan(Math.floor(Date.now() / 1000) - config.process_unpaid_for_period, function (json) {
+    return callback(null, json)
+  })
 }
 
 function prepareJob (json, callback) {
@@ -98,7 +86,7 @@ function processJob (job, callback) {
       // and fire url callback
     console.log('address: ' + job.address + ' expect: ' + job.btc_to_ask + ' confirmed: ' + (resp.btc_actual) + ' unconfirmed: ' + (resp.btc_unconfirmed))
 
-    var paid = false
+    let paid = false
     if (job.btc_to_ask >= config.small_amount_threshhold) { // thats a lot, so we better check confirmed balance
       if ((resp.btc_actual) / job.btc_to_ask >= 0.95) {
         paid = true

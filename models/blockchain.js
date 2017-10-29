@@ -7,52 +7,27 @@
  * Author: Igor Korsakov
  * */
 
-var bitcore = require('bitcore-lib')
+let config = require('../config')
+let jayson = require('jayson/promise')
+let client = jayson.client.http(config.bitcoind.rpc)
 
-var provider = require('../models/provider/bitcore')
+function importaddress (address) {
+  return client.request('importaddress', [address, address, false])
+}
 
-exports.createTransaction = function (toAddress, btcAmount, minerFee, WIF, callback) {
-  if (minerFee === false) minerFee = 0.0001
-  var pk = new bitcore.PrivateKey.fromWIF(WIF) // eslint-disable-line new-cap
-  var fromAddress = (pk.toPublicKey()).toAddress(bitcore.Networks.livenet)
-  var totalSatoshis = 0
+function getreceivedbyaddress (address) {
+  let reqs = [
+    client.request('getreceivedbyaddress', [address, 0]),
+    client.request('getreceivedbyaddress', [address, 3])
+  ]
 
-  var transaction = new bitcore.Transaction()
+  return Promise.all(reqs)
+}
 
-  provider.fetchTransactionsByAddress(fromAddress, function (txs) {
-    for (var i = 0, l = txs.length; i < l; i++) { // iterating all transactions on that address
-      var out = false
+function getblockchaininfo () {
+  return client.request('getblockchaininfo', [])
+}
 
-      for (var ii = 0, ll = txs[i].out.length; ii < ll; ii++) { // iterating all outs on transaction to find then one we own (fromAddress)
-        if (txs[i].out[ii].addr === fromAddress.toString() && typeof txs[i].out[ii].spent_by === 'undefined') {
-          out = txs[i].out[ii]
-        }
-      } // end for
-
-      if (!out) continue
-
-      transaction.from({ 'address': fromAddress,
-        'txid': txs[i].hash,
-        'vout': out.n,
-        'scriptPubKey': out.script,
-        'satoshis': out.value
-      })
-
-      totalSatoshis += out.value
-
-      if (totalSatoshis >= (parseInt(btcAmount * 100000000) + parseInt(minerFee * 100000000))) break // we have enough outs
-    } // end for
-
-    transaction
-                .to(toAddress, parseInt(btcAmount * 100000000))
-                .fee(parseInt(minerFee * 100000000))
-                .change(fromAddress)
-                .sign(pk)
-
-    callback(transaction)
-  }) // end fetch transactions
-}//  end createTransaction
-
-exports.getAddress = provider.getAddress
-exports.fetchTransactionsByAddress = provider.fetchTransactionsByAddress
-exports.broadcastTransaction = provider.broadcastTransaction
+exports.importaddress = importaddress
+exports.getreceivedbyaddress = getreceivedbyaddress
+exports.getblockchaininfo = getblockchaininfo

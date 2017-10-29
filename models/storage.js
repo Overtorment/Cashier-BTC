@@ -7,9 +7,9 @@
  * Author: Igor Korsakov
  * */
 
-var request = require('request')
-var bitcore = require('bitcore-lib')
-var config = require('../config')
+let request = require('request')
+let bitcore = require('bitcore-lib')
+let config = require('../config')
 
 exports.getDocument = function (docid, callback) {
   return exports.getAddress(docid, callback) // since atm it does exactly the same
@@ -45,8 +45,8 @@ exports.getSeller = function (sellerId, callback) {
 }
 
 exports.saveAddress = function (body, callback) {
-  var privateKey = new bitcore.PrivateKey()
-  var address = new bitcore.Address(privateKey.toPublicKey())
+  let privateKey = new bitcore.PrivateKey()
+  let address = new bitcore.Address(privateKey.toPublicKey())
   body.WIF = privateKey.toWIF()
   body.address = address.toString()
   body.private_key = privateKey.toString()
@@ -80,9 +80,9 @@ exports.savePayout = function (body, callback) {
 }
 
 exports.saveSeller = function (sellerId, callback) {
-  var privateKey = new bitcore.PrivateKey()
-  var address = new bitcore.Address(privateKey.toPublicKey())
-  var data = {
+  let privateKey = new bitcore.PrivateKey()
+  let address = new bitcore.Address(privateKey.toPublicKey())
+  let data = {
     'WIF': privateKey.toWIF(),
     'address': address.toString(),
     'private_key': privateKey.toString(),
@@ -97,13 +97,14 @@ exports.saveSeller = function (sellerId, callback) {
     if (error) {
       return callback(false, body)
     }
+    response.body.address = data.address
     return callback(response.body)
   })
 }
 
 exports.getUnprocessedAdressesYoungerThan = function (timestamp, callback) {
   // запрашиваем view кауча, по которому получаем необработанные задания
-  request.get(config.couchdb + '/_design/address/_view/unprocessed_by_timestamp?startkey=' + timestamp + '&inclusive_end=true&limit=1&reduce=false&include_docs=true', function (error, response, body) {
+  request.get(config.couchdb + '/_design/address/_view/unprocessed_by_timestamp?startkey=' + timestamp + '&inclusive_end=true&limit=10000&reduce=false&include_docs=true', function (error, response, body) {
     if (error) {
       return callback(false, error)
     }
@@ -111,7 +112,7 @@ exports.getUnprocessedAdressesYoungerThan = function (timestamp, callback) {
   })
 }
 
-exports.getUnpaidAdressesYoungerThan = function (timestamp, callback) {
+/* TO DELETE exports.getUnpaidAdressesYoungerThan = function (timestamp, callback) {
   // запрашиваем view кауча, по которому получаем необработанные задания
   request.get(config.couchdb + '/_design/address/_view/unpaid_by_timestamp?startkey=' + timestamp + '&inclusive_end=true&limit=1&reduce=false&include_docs=true', function (error, response, body) {
     if (error) {
@@ -119,7 +120,7 @@ exports.getUnpaidAdressesYoungerThan = function (timestamp, callback) {
     }
     return callback(body)
   })
-}
+} */
 
 exports.getPaidAdressesYoungerThan = function (timestamp, callback) {
   // запрашиваем view кауча, по которому получаем необработанные задания

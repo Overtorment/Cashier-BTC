@@ -44,7 +44,7 @@ function getJob (callback) {
 
 function processJob (json, callback) {
   json = JSON.parse(json)
-  if (typeof json.rows[0] === 'undefined') {
+  if (typeof json.rows === 'undefined' || typeof json.rows[0] === 'undefined') {
     return callback(null, false)
   }  // no jobs, пробрасываем чтоб waterfall доходил до логического конца
 
