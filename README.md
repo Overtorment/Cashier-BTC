@@ -1,12 +1,15 @@
 Cashier-BTC
 ===================
 
+v2 refactored and improved, battle-tested
+-----------------------------------------
+
 [![JavaScript Style Guide](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
 
 Self-hosted Node.js Bitcoin payment gateway. Provides REST API for anyone who wants to accept bitcoin.
 Request payments (invoicing), check payments (whether invoice is paid), receive callbacks if payment is made.
 Aggregate funds on final (aggregational) address.
-Depends on Bitcore, Couchdb for storage.
+Depends on Nodejs v8+, Bitcoin Core, Couchdb for storage.
 
 * Simple
 * Transactions are signed locally. No private keys leak
@@ -16,19 +19,21 @@ Depends on Bitcore, Couchdb for storage.
 Installation
 ------------
 
+
+
 ```
 $ git clone https://github.com/Overtorment/Cashier-BTC && cd Cashier-BTC
 $ npm install
 $ cp config.js.dev config.js
 ```
 
-* Install [Bitcore full node and Bitcore Insight API](https://github.com/bitpay/insight-api)
+* Install [Bitcoin Core](BITCOIN-CORE-INSTALL.md)
 * Install Couchdb (install one if needed, or use https://cloudant.com)
 
 Edit config.js:
 
 * Point it to a new Couchdb database
-* Point it to a Bitcore server
+* Point it to a Bitcoin Core RPC server
 
 Tests
 -----
