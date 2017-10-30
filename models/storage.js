@@ -57,21 +57,36 @@ exports.getSeller = function (sellerId, callback) {
   })
 }
 
+
+exports.getSellerPromise = function (sellerId) {
+  return new Promise(function (resolve, reject) {
+    request.get(config.couchdb + '/' + sellerId, function (error, response, body) {
+      if (error) {
+        return reject(error)
+      }
+
+      return resolve(JSON.parse(body))
+    })
+  })
+}
+
 exports.saveAddress = function (body, callback) {
-  let privateKey = new bitcore.PrivateKey()
-  let address = new bitcore.Address(privateKey.toPublicKey())
-  body.WIF = privateKey.toWIF()
-  body.address = address.toString()
-  body.private_key = privateKey.toString()
-  body.public_key = privateKey.toPublicKey().toString()
-  body.timestamp = Math.floor(Date.now() / 1000)
-  body.doctype = 'address'
-  body._id = body.address
   request.post(config.couchdb, { json: body }, function (error, response, body) {
     if (error) {
       return callback(false, body)
     }
     return callback(response.body)
+  })
+}
+
+exports.saveAddressPromise = function (body) {
+  return new Promise(function(resolve, reject){
+    request.post(config.couchdb, { json: body }, function (error, response, body) {
+      if (error) {
+        return reject(body)
+      }
+      return resolve(response.body)
+    })
   })
 }
 
@@ -112,6 +127,31 @@ exports.saveSeller = function (sellerId, callback) {
     }
     response.body.address = data.address
     return callback(response.body)
+  })
+}
+
+exports.saveSellerPromise = function (sellerId) {
+  return new Promise(function(resolve, reject) {
+    let privateKey = new bitcore.PrivateKey()
+    let address = new bitcore.Address(privateKey.toPublicKey())
+    let data = {
+      'WIF': privateKey.toWIF(),
+      'address': address.toString(),
+      'private_key': privateKey.toString(),
+      'public_key': privateKey.toPublicKey().toString(),
+      'timestamp': Math.floor(Date.now() / 1000),
+      'seller': sellerId,
+      '_id': sellerId,
+      'doctype': 'seller'
+    }
+
+    request.post(config.couchdb, { json: data }, function (error, response, body) {
+      if (error) {
+        return reject(body)
+      }
+      response.body.address = data.address
+      return resolve(response.body)
+    })
   })
 }
 

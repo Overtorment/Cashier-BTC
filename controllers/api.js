@@ -24,6 +24,7 @@ let config = require('../config')
 let bitcoind = require('../models/blockchain')
 let storage = require('../models/storage')
 
+
 router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callback_url', function (req, res) {
   let exchangeRate, btcToAsk, satoshiToAsk
 
@@ -41,6 +42,9 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
   satoshiToAsk = Math.floor((req.params.expect / exchangeRate) * 100000000)
   btcToAsk = satoshiToAsk / 100000000
 
+  let privateKey = new bitcore.PrivateKey()
+  let address = new bitcore.Address(privateKey.toPublicKey())
+
   let addressData = {
     'timestamp': Math.floor(Date.now() / 1000),
     'expect': req.params.expect,
@@ -50,61 +54,52 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
     'message': req.params.message,
     'seller': req.params.seller,
     'customer': req.params.customer,
-    'callback_url': decodeURIComponent(req.params.callback_url)
+    'callback_url': decodeURIComponent(req.params.callback_url),
+    'WIF' : privateKey.toWIF(),
+    'address' : address.toString(),
+    'private_key' : privateKey.toString(),
+    'public_key' : privateKey.toPublicKey().toString(),
+    'doctype' : 'address',
+    '_id' : address.toString()
   }
 
-  storage.saveAddress(addressData, function (saveAddressResponse) {
-    if (saveAddressResponse.ok === true) {
-      console.log(req.id, 'saveAddress()', JSON.stringify(addressData))
+  let paymentInfo = {
+    address: addressData.address,
+    message: req.params.message,
+    label: req.params.message,
+    amount: satoshiToAsk
+  }
 
-      let paymentInfo = {
-        address: addressData.address,
-        message: req.params.message,
-        label: req.params.message,
-        amount: satoshiToAsk
-      }
+  let answer = {
+    'link': new bitcore.URI(paymentInfo).toString(),
+    'qr': config.base_url_qr + '/generate_qr/' + encodeURIComponent(new bitcore.URI(paymentInfo).toString()),
+    'qr_simple': config.base_url_qr + '/generate_qr/' + addressData.address,
+    'address': addressData.address
+  };
 
-      let answer = {
-        'link': new bitcore.URI(paymentInfo).toString(),
-        'qr': config.base_url_qr + '/generate_qr/' + encodeURIComponent(new bitcore.URI(paymentInfo).toString()),
-        'qr_simple': config.base_url_qr + '/generate_qr/' + addressData.address,
-        'address': addressData.address
-      }
 
-      storage.getSeller(req.params.seller, function (responseBody) { // checking if seller's data in database
-        console.log(req.id, 'checking seller existance...')
-        if (typeof responseBody.error !== 'undefined') { // seller doesnt exist
-          storage.saveSeller(req.params.seller, function (saveSellerResponse) { // creating seller
-            console.log(req.id, 'seller doesnt exist. creating...')
-            if (saveSellerResponse.ok === true) { // seller create success
-              bitcoind.importaddress(saveSellerResponse.address).then(() => {
-                console.log(req.id, 'seller create success')
-                bitcoind.importaddress(addressData.address)
-                  .then(() => res.send(JSON.stringify(answer)))
-                  .catch(() => {
-                    console.log(req.id, 'bitcoind.importaddress fail')
-                    res.send(JSON.stringify({'error': 'bitcoind.importaddress fail'}))
-                  })
-              })
-            } else { // seller create fail
-              console.log(req.id, 'seller create fail')
-              res.send(JSON.stringify({'error': 'Could not save seller'}))
-            }
-          })
-        } else { // seller exists
-          console.log(req.id, 'seller already exists')
-          bitcoind.importaddress(answer.address) // bitcoind must watch this address without rescan
-            .then(() => res.send(JSON.stringify(answer)))
-            .catch(() => {
-              console.log(req.id, 'bitcoind.importaddress fail')
-              res.send(JSON.stringify({'error': 'bitcoind.importaddress fail'}))
-            })
-        }
-      })
-    } else { // saveAddress() failed
-      res.send(saveAddressResponse.error + ': ' + saveAddressResponse.reason)
+  (async function(){
+    console.log(req.id, 'checking seller existance...')
+    let responseBody = await storage.getSellerPromise(req.params.seller)
+
+    if (typeof responseBody.error !== 'undefined') { // seller doesnt exist
+      console.log(req.id, 'seller doesnt exist. creating...')
+      let saveSellerResponse = await storage.saveSellerPromise(req.params.seller)
+      await bitcoind.importaddress(saveSellerResponse.address)
+    } else { // seller exists
+      console.log(req.id, 'seller already exists')
     }
+
+    console.log(req.id, 'saveAddress()', JSON.stringify(addressData))
+    await storage.saveAddressPromise(addressData)
+    await bitcoind.importaddress(addressData.address)
+
+    res.send(JSON.stringify(answer))
+  })().catch((error) => {
+    console.log(req.id, JSON.stringify(error))
+    res.send(JSON.stringify({error : JSON.stringify(error)}))
   })
+
 })
 
 router.get('/check_payment/:address', function (req, res) {
@@ -126,7 +121,7 @@ router.get('/check_payment/:address', function (req, res) {
         res.send(JSON.stringify(answer))
       } else {
         console.log(req.id, 'storage error', JSON.stringify(addressJson))
-        res.send(JSON.stringify(addressJson))
+        res.send(JSON.stringify({'error' : addressJson}))
       }
   })
 })
