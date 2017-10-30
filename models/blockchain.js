@@ -3,9 +3,9 @@
  * -----------
  * Self-hosted bitcoin payment gateway
  *
- * License: WTFPL
- * Author: Igor Korsakov
- * */
+ * https://github.com/Overtorment/Cashier-BTC
+ *
+ **/
 
 let config = require('../config')
 let jayson = require('jayson/promise')

@@ -19,4 +19,4 @@ Run
 ./bin/bitcoin-cli -rpcclienttimeout=30  -rpcport=8442  -rpcuser=user -rpcpassword=pass     getblockchaininfo
 ```
 
-to check it. If it hangs - blockchain is busy syncing, check out `debug.log` in datadir
+to check it. If it hangs - blockchain is busy syncing, check out `debug.log` in datadir.

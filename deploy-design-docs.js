@@ -1,3 +1,18 @@
+/**
+ * Cashier-BTC
+ * -----------
+ * Self-hosted bitcoin payment gateway
+ *
+ * https://github.com/Overtorment/Cashier-BTC
+ *
+ **/
+
+/**
+ * checks if design docs are deployed
+ * to Couchdb and deloys them if not
+ *
+ */
+
 let fs = require('fs')
 let storage = require('./models/storage')
 

@@ -12,14 +12,13 @@ Aggregate funds on final (aggregational) address.
 Depends on Nodejs v8+, Bitcoin Core, Couchdb for storage.
 
 * Simple
+* Autonomous (works though slf-hosted Bitcoin Core node)
 * Transactions are signed locally. No private keys leak
 * Battle-tested in production: 50+ BTC turnover already
 
 
 Installation
 ------------
-
-
 
 ```
 $ git clone https://github.com/Overtorment/Cashier-BTC && cd Cashier-BTC
@@ -28,9 +27,9 @@ $ cp config.js.dev config.js
 ```
 
 * Install [Bitcoin Core](BITCOIN-CORE-INSTALL.md)
-* Install Couchdb (install one if needed, or use [https://cloudant.com](https://cloudant.com))
+* Install Couchdb (or use [https://cloudant.com](https://cloudant.com))
 
-Edit config.js:
+Edit `config.js`:
 
 * Point it to a new Couchdb database
 * Point it to a Bitcoin Core RPC server
@@ -51,9 +50,9 @@ $ nodejs worker.js
 $ nodejs worker2.js
 ```
 
-Open http://localhost:2222 in browser, you should see 'Cashier-BTC reporting for duty'.
+Open [http://localhost:2222](http://localhost:2222) in browser, you should see 'Cashier-BTC reporting for duty'.
 That's it, ready to use.
-Use tools like supervisord or foreverjs to keep it running.
+Use tools like `supervisord` or `foreverjs` to keep it running.
 
 License
 -------
@@ -70,12 +69,13 @@ TODO
 ----
 
 * ~~[V] Get rid of Chain and leave Bitcore only~~
-* [ ] Add options to work through bitcoind and other bitcoin network endpoints
+* ~~[V] Add options to work through bitcoind and other bitcoin network endpoints~~
 * ~~[V] Add tests~~
 * ~~[V] Better abstractioning (add more abstraction layers)~~
 * [ ] Better logging & error handling
 * [ ] Stats
-
+* [ ] Better tests
+* [ ] CI
 
 
 API
@@ -84,13 +84,11 @@ API
 GET /request_payment/:expect/:currency/:message/:seller/:customer/:callback_url
 --------------------------------------------------------------------------------------------------------
 
-Create a request to pay, supported currencies BTC, USD, EUR. Non-btc currency is converted to btc using current rate from btc-e.com.
+Create a request to pay, supported currencies BTC, USD, EUR. Non-btc currency is converted to btc using current rate from bitstamp.com.
 Returns a json document with QR code to be displayed to the payer, and a unique address for that particular payment (you can use it as invoice id).
-Message will be displayed to the client (for example, you can write "Payment for goods"). Seller and customer - system field, here you can 
-write the application that created the request and the payer id.
+Message will be displayed to the client (for example, you can write "Payment for goods"). Seller and customer - system field, here you can
+write the application that created the request and the payer id. Keep Seller field private, it is also used for payouts.
 Callback_url will be requested once the invoice is paid.
-
-
 
 	Example
 
@@ -107,9 +105,6 @@ Callback_url will be requested once the invoice is paid.
 
 Link can be opened by the payer, there is a chance it will be handled by his bitcoin wallet.
 QR whoud be shown to payer as well. Duplicate it with text, like, dear user, please pay the %expect% amount to %address%.
-
-
-
 
 GET /check_payment/:address
 ---------------------------------------
@@ -147,10 +142,6 @@ You might want to disable this call for security reasons.
 	Response
 
 		If successfull, json document with transaction details (txid, txhex, etc)
-
-
-
-
 
 
 GET /get_seller_balance/:seller

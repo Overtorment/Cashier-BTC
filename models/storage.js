@@ -3,9 +3,9 @@
  * -----------
  * Self-hosted bitcoin payment gateway
  *
- * License: WTFPL
- * Author: Igor Korsakov
- * */
+ * https://github.com/Overtorment/Cashier-BTC
+ *
+ **/
 
 let request = require('request')
 let bitcore = require('bitcore-lib')
@@ -116,7 +116,6 @@ exports.saveSeller = function (sellerId, callback) {
 }
 
 exports.getUnprocessedAdressesYoungerThan = function (timestamp, callback) {
-  // запрашиваем view кауча, по которому получаем необработанные задания
   request.get(config.couchdb + '/_design/address/_view/unprocessed_by_timestamp?startkey=' + timestamp + '&inclusive_end=true&limit=10000&reduce=false&include_docs=true', function (error, response, body) {
     if (error) {
       return callback(false, error)
@@ -125,40 +124,13 @@ exports.getUnprocessedAdressesYoungerThan = function (timestamp, callback) {
   })
 }
 
-/* TO DELETE exports.getUnpaidAdressesYoungerThan = function (timestamp, callback) {
-  // запрашиваем view кауча, по которому получаем необработанные задания
-  request.get(config.couchdb + '/_design/address/_view/unpaid_by_timestamp?startkey=' + timestamp + '&inclusive_end=true&limit=1&reduce=false&include_docs=true', function (error, response, body) {
-    if (error) {
-      return callback(false, error)
-    }
-    return callback(body)
-  })
-} */
-
 exports.getPaidAdressesYoungerThan = function (timestamp, callback) {
-  // запрашиваем view кауча, по которому получаем необработанные задания
   request.get(config.couchdb + '/_design/address/_view/paid_by_timestamp?startkey=' + timestamp + '&inclusive_end=true&limit=1&reduce=false&include_docs=true', function (error, response, body) {
     if (error) {
       return callback(false, error)
     }
     return callback(body)
   })
-}
-
-exports.takeJob = function (json, callback) {
-  // помечаем и сохраняем обратно в БД
-  json.processed = 'processing'
-  request.put(config.couchdb + '/' + json._id,
-    { 'json': json },
-        callback
-  )
-}
-
-exports.saveJobResults = function (json, callback) {
-  request.put(config.couchdb + '/' + json._id,
-    { 'json': json },
-      callback
-  )
 }
 
 exports.saveJobResultsPromise = function (json) {

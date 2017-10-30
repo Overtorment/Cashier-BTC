@@ -7,8 +7,10 @@
  *
  **/
 
-/*
-  worker iterates through all addresses, marks paid and fires callbacks
+/**
+ * worker iterates through all addresses,
+ * marks paid and fires callbacks
+ *
 */
 
 let rp = require('request-promise')
@@ -38,21 +40,21 @@ function processJob (rows) {
     rows.rows = rows.rows || []
 
     for (const row of rows.rows) {
-      let received = await blockchain.getreceivedbyaddress(row.doc.address)
-      console.log('address:\t' + row.doc.address + '\t expect:\t' + row.doc.btc_to_ask + '\t confirmed:\t' + (received[1].result) + '\t unconfirmed:\t' + (received[0].result))
+      let json = row.doc
+      let received = await blockchain.getreceivedbyaddress(json.address)
+      console.log('address:\t' + json.address + '\t expect:\t' + json.btc_to_ask + '\t confirmed:\t' + (received[1].result) + '\t unconfirmed:\t' + (received[0].result))
       if (
-          (row.doc.btc_to_ask >= config.small_amount_threshhold && (received[1].result >= row.doc.btc_to_ask)) ||
-          (row.doc.btc_to_ask < config.small_amount_threshhold && (received[0].result >= row.doc.btc_to_ask))
+          (json.btc_to_ask >= config.small_amount_threshhold && (received[1].result >= json.btc_to_ask)) ||
+          (json.btc_to_ask < config.small_amount_threshhold && (received[0].result >= json.btc_to_ask))
         ) {
           // paid ok
-        let json = row.doc
         json.processed = 'paid'
         await storage.saveJobResultsPromise(json)
         console.log('firing callback: ' + json.callback_url)
         await rp({ uri: json.callback_url, timeout: 10 * 1000 })
-          // marked as paid and fired a callack. why not forward funds instantly?
-          // because in case of zero-conf accepted balance we wound need to wait for a couple of
-          // confirmations till we can forward funds
+        // marked as paid and fired a callack. why not forward funds instantly?
+        // because in case of zero-conf accepted balance we wound need to wait for a couple of
+        // confirmations till we can forward funds
       }
     }
   })()
