@@ -34,7 +34,7 @@ describe('acceptance - loading express', function () {
 
   it('responds to /request_payment/:expect/:currency/:message/:seller/:customer/:callback_url', function (done) {
     request(server)
-      .get('/request_payment/0.666/BTC/testmessage/testseller/testcustomer/http%3A%2F%2Ffuckoff.com%2F')
+      .get('/request_payment/0.666/BTC/testmessage/testseller/testcustomer/http%3A%2F%2Ftesturl.com%2F')
       .expect(function (res) {
         let json = JSON.parse(res.text)
         createdPayment = json
@@ -57,6 +57,74 @@ describe('acceptance - loading express', function () {
         rp.get(require('./../../config.js').couchdb + '/testseller').then((resultFromDb) => { // verifying in the database
           resultFromDb = JSON.parse(resultFromDb)
           expect(resultFromDb.seller).to.equal('testseller')
+          expect(resultFromDb.doctype).to.equal('seller')
+          should.exist(resultFromDb.WIF)
+          should.exist(resultFromDb.address)
+        })
+      })
+      .expect(200, done)
+  })
+
+  it('responds to duplicate /request_payment/:expect/:currency/:message/:seller/:customer/:callback_url', function (done) {
+    request(server)
+      .get('/request_payment/0.666/BTC/testmessage/testseller/testcustomer/http%3A%2F%2Ftesturl.com%2F')
+      .expect(function (res) {
+        let json = JSON.parse(res.text)
+        createdPayment = json
+        should.exist(json)
+        json.should.be.an('object')
+        should.exist(json.address)
+        should.exist(json.link)
+        should.exist(json.qr)
+        should.exist(json.qr_simple)
+
+        rp.get(require('./../../config.js').couchdb + '/' + json.address).then((resultFromDb) => { // verifying in the database
+          resultFromDb = JSON.parse(resultFromDb)
+          expect(resultFromDb.address).to.equal(json.address)
+          expect(resultFromDb.btc_to_ask).to.equal(0.666)
+          expect(resultFromDb.seller).to.equal('testseller')
+          expect(resultFromDb.doctype).to.equal('address')
+          should.exist(resultFromDb.WIF)
+        })
+
+        rp.get(require('./../../config.js').couchdb + '/testseller').then((resultFromDb) => { // verifying in the database
+          resultFromDb = JSON.parse(resultFromDb)
+          expect(resultFromDb.seller).to.equal('testseller')
+          expect(resultFromDb.doctype).to.equal('seller')
+          should.exist(resultFromDb.WIF)
+          should.exist(resultFromDb.address)
+        })
+      })
+      .expect(200, done)
+  })
+
+
+  it('creates new seller on /request_payment/:expect/:currency/:message/:seller/:customer/:callback_url', function (done) {
+    let seller = 'testseller-' + Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5)
+    request(server)
+      .get('/request_payment/0.666/BTC/testmessage/' + seller + '/testcustomer/http%3A%2F%2Ftesturl.com%2F')
+      .expect(function (res) {
+        let json = JSON.parse(res.text)
+        createdPayment = json
+        should.exist(json)
+        json.should.be.an('object')
+        should.exist(json.address)
+        should.exist(json.link)
+        should.exist(json.qr)
+        should.exist(json.qr_simple)
+
+        rp.get(require('./../../config.js').couchdb + '/' + json.address).then((resultFromDb) => { // verifying in the database
+          resultFromDb = JSON.parse(resultFromDb)
+          expect(resultFromDb.address).to.equal(json.address)
+          expect(resultFromDb.btc_to_ask).to.equal(0.666)
+          expect(resultFromDb.seller).to.equal(seller)
+          expect(resultFromDb.doctype).to.equal('address')
+          should.exist(resultFromDb.WIF)
+        })
+
+        rp.get(require('./../../config.js').couchdb + '/' + seller).then((resultFromDb) => { // verifying in the database
+          resultFromDb = JSON.parse(resultFromDb)
+          expect(resultFromDb.seller).to.equal(seller)
           expect(resultFromDb.doctype).to.equal('seller')
           should.exist(resultFromDb.WIF)
           should.exist(resultFromDb.address)
