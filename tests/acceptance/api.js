@@ -98,7 +98,6 @@ describe('acceptance - loading express', function () {
       .expect(200, done)
   })
 
-
   it('creates new seller on /request_payment/:expect/:currency/:message/:seller/:customer/:callback_url', function (done) {
     let seller = 'testseller-' + Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5)
     request(server)

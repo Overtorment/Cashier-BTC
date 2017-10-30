@@ -57,7 +57,6 @@ exports.getSeller = function (sellerId, callback) {
   })
 }
 
-
 exports.getSellerPromise = function (sellerId) {
   return new Promise(function (resolve, reject) {
     request.get(config.couchdb + '/' + sellerId, function (error, response, body) {
@@ -80,7 +79,7 @@ exports.saveAddress = function (body, callback) {
 }
 
 exports.saveAddressPromise = function (body) {
-  return new Promise(function(resolve, reject){
+  return new Promise(function (resolve, reject) {
     request.post(config.couchdb, { json: body }, function (error, response, body) {
       if (error) {
         return reject(body)
@@ -131,7 +130,7 @@ exports.saveSeller = function (sellerId, callback) {
 }
 
 exports.saveSellerPromise = function (sellerId) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     let privateKey = new bitcore.PrivateKey()
     let address = new bitcore.Address(privateKey.toPublicKey())
     let data = {

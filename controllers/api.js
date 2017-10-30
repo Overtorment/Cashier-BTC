@@ -24,7 +24,6 @@ let config = require('../config')
 let bitcoind = require('../models/blockchain')
 let storage = require('../models/storage')
 
-
 router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callback_url', function (req, res) {
   let exchangeRate, btcToAsk, satoshiToAsk
 
@@ -55,12 +54,12 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
     'seller': req.params.seller,
     'customer': req.params.customer,
     'callback_url': decodeURIComponent(req.params.callback_url),
-    'WIF' : privateKey.toWIF(),
-    'address' : address.toString(),
-    'private_key' : privateKey.toString(),
-    'public_key' : privateKey.toPublicKey().toString(),
-    'doctype' : 'address',
-    '_id' : address.toString()
+    'WIF': privateKey.toWIF(),
+    'address': address.toString(),
+    'private_key': privateKey.toString(),
+    'public_key': privateKey.toPublicKey().toString(),
+    'doctype': 'address',
+    '_id': address.toString()
   }
 
   let paymentInfo = {
@@ -77,8 +76,7 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
     'address': addressData.address
   };
 
-
-  (async function(){
+  (async function () {
     console.log(req.id, 'checking seller existance...')
     let responseBody = await storage.getSellerPromise(req.params.seller)
 
@@ -97,9 +95,8 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
     res.send(JSON.stringify(answer))
   })().catch((error) => {
     console.log(req.id, JSON.stringify(error))
-    res.send(JSON.stringify({error : JSON.stringify(error)}))
+    res.send(JSON.stringify({error: error}))
   })
-
 })
 
 router.get('/check_payment/:address', function (req, res) {
@@ -109,20 +106,20 @@ router.get('/check_payment/:address', function (req, res) {
   ]
 
   Promise.all(promises).then((values) => {
-      let received = values[0]
-      let addressJson = values[1]
+    let received = values[0]
+    let addressJson = values[1]
 
-      if (addressJson && addressJson.btc_to_ask && addressJson.doctype === 'address') {
-        let answer = {
-          'btc_expected': addressJson.btc_to_ask,
-          'btc_actual': received[1].result,
-          'btc_unconfirmed': received[0].result
-        }
-        res.send(JSON.stringify(answer))
-      } else {
-        console.log(req.id, 'storage error', JSON.stringify(addressJson))
-        res.send(JSON.stringify({'error' : addressJson}))
+    if (addressJson && addressJson.btc_to_ask && addressJson.doctype === 'address') {
+      let answer = {
+        'btc_expected': addressJson.btc_to_ask,
+        'btc_actual': received[1].result,
+        'btc_unconfirmed': received[0].result
       }
+      res.send(JSON.stringify(answer))
+    } else {
+      console.log(req.id, 'storage error', JSON.stringify(addressJson))
+      res.send(JSON.stringify({'error': 'storage error'}))
+    }
   })
 })
 
@@ -161,28 +158,27 @@ router.get('/payout/:seller/:amount/:currency/:address', function (req, res) {
 })
 
 router.get('/get_seller_balance/:seller', function (req, res) {
-  storage.getSeller(req.params.seller, function (seller) { // checking if such seller exists
+  (async function () {
+    let seller = await storage.getSellerPromise(req.params.seller)
     if (seller === false || typeof seller.error !== 'undefined') {
       console.log(req.id, 'no such seller')
       return res.send(JSON.stringify({'error': 'no such seller'}))
     }
-    bitcoind.getreceivedbyaddress(seller.address).then((responses) => {
-      let answer = {
-        'btc_actual': responses[1].result,
-        'btc_unconfirmed': responses[0].result
-      }
-      res.send(JSON.stringify(answer))
-    }).catch(() => {
-      console.log(req.id, 'bitcoind.getreceivedbyaddress fail')
-      res.send(JSON.stringify({'error': 'bitcoind.getreceivedbyaddress fail'}))
-    })
+
+    let responses = await bitcoind.getreceivedbyaddress(seller.address)
+    let answer = {
+      'btc_actual': responses[1].result,
+      'btc_unconfirmed': responses[0].result
+    }
+    res.send(JSON.stringify(answer))
+  })().catch((error) => {
+    console.log(req.id, JSON.stringify(error))
+    res.send(JSON.stringify({'error': error}))
   })
 })
 
 router.get('/get_address_confirmed_balance/:address', function (req, res) {
-  bitcoind.getreceivedbyaddress(req.params.address).then((responses) => {
-    return res.send(JSON.stringify(responses[1].result))
-  })
+  bitcoind.getreceivedbyaddress(req.params.address).then((responses) => res.send(JSON.stringify(responses[1].result)))
 })
 
 module.exports = router
