@@ -10,6 +10,7 @@
 let request = require('request')
 let bitcore = require('bitcore-lib')
 let config = require('../config')
+let rp = require('request-promise')
 
 exports.getDocument = function (docid, callback) {
   return exports.getAddress(docid, callback) // since atm it does exactly the same
@@ -31,6 +32,18 @@ exports.getAddress = function (address, callback) {
     }
 
     callback(JSON.parse(body))
+  })
+}
+
+exports.getAddressPromise = function (address) {
+  return new Promise(function (resolve, reject) {
+    request.get(config.couchdb + '/' + address, function (error, response, body) {
+      if (error) {
+        return reject(error)
+      }
+
+      resolve(JSON.parse(body))
+    })
   })
 }
 
@@ -146,5 +159,10 @@ exports.saveJobResults = function (json, callback) {
     { 'json': json },
       callback
   )
+}
+
+
+exports.saveJobResultsPromise = function (json) {
+  return rp.put(config.couchdb + '/' + json._id, { 'json': json })
 }
 
