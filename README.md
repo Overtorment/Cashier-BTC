@@ -28,7 +28,7 @@ $ cp config.js.dev config.js
 ```
 
 * Install [Bitcoin Core](BITCOIN-CORE-INSTALL.md)
-* Install Couchdb (install one if needed, or use https://cloudant.com)
+* Install Couchdb (install one if needed, or use [https://cloudant.com](https://cloudant.com))
 
 Edit config.js:
 
