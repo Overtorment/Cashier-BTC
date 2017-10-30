@@ -12,7 +12,7 @@ Aggregate funds on final (aggregational) address.
 Depends on Nodejs v8+, Bitcoin Core, Couchdb for storage.
 
 * Simple
-* Autonomous (works though slf-hosted Bitcoin Core node)
+* Autonomous (works though self-hosted Bitcoin Core node)
 * Transactions are signed locally. No private keys leak
 * Battle-tested in production: 50+ BTC turnover already
 

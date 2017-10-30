@@ -11,7 +11,7 @@ cd bitcoin-0.15.0/
 # dont forget to put your own allow ip, username, pass, datadir
 ```
 
-Wait till it syncs (might take a lot of time).
+Wait till it syncs (might take a while).
 
 Run 
 
@@ -19,4 +19,4 @@ Run
 ./bin/bitcoin-cli -rpcclienttimeout=30  -rpcport=8442  -rpcuser=user -rpcpassword=pass     getblockchaininfo
 ```
 
-to check it. If it hangs - blockchain is busy syncing, check out `debug.log` in datadir.
+to check it. If it hangs - blockchain is busy syncing, check out `debug.log` in datadir for details.
