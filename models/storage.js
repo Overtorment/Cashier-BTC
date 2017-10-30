@@ -161,7 +161,6 @@ exports.saveJobResults = function (json, callback) {
   )
 }
 
-
 exports.saveJobResultsPromise = function (json) {
   return rp.put(config.couchdb + '/' + json._id, { 'json': json })
 }

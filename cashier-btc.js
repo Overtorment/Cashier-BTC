@@ -28,7 +28,6 @@ app.set('trust proxy', 'loopback')
 
 let bodyParser = require('body-parser')
 let config = require('./config')
-let fs = require('fs')
 let https = require('https')
 
 app.use(bodyParser.urlencoded({ extended: false })) // parse application/x-www-form-urlencoded
