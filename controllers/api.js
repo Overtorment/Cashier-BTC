@@ -108,20 +108,26 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
 })
 
 router.get('/check_payment/:address', function (req, res) {
-  bitcoind.getreceivedbyaddress(req.params.address).then((responses) => {
-    storage.getAddress(req.params.address, function (json) {
-      if (json !== false && json.btc_to_ask) {
+  let promises = [
+    bitcoind.getreceivedbyaddress(req.params.address),
+    storage.getAddressPromise(req.params.address)
+  ]
+
+  Promise.all(promises).then((values) => {
+      let received = values[0]
+      let addressJson = values[1]
+
+      if (addressJson && addressJson.btc_to_ask && addressJson.doctype === 'address') {
         let answer = {
-          'btc_expected': json.btc_to_ask,
-          'btc_actual': responses[1].result,
-          'btc_unconfirmed': responses[0].result
+          'btc_expected': addressJson.btc_to_ask,
+          'btc_actual': received[1].result,
+          'btc_unconfirmed': received[0].result
         }
         res.send(JSON.stringify(answer))
       } else {
-        console.log(req.id, 'storage error', JSON.stringify(json))
-        res.send(JSON.stringify(json))
+        console.log(req.id, 'storage error', JSON.stringify(addressJson))
+        res.send(JSON.stringify(addressJson))
       }
-    })
   })
 })
 
