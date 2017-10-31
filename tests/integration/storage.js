@@ -27,6 +27,7 @@ describe('integration - storage', function () {
   describe('saveAddress() && getAddress()', function () {
     it('should save document with address data, and get it back', function (done) {
       let storage = require('./../../models/storage')
+      let address = 'test'+Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5)+Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5)
       let data = {
         'expect': 1,
         'currency': 'BTC',
@@ -35,7 +36,13 @@ describe('integration - storage', function () {
         'message': 'message',
         'seller': 'testseller',
         'customer': 'testuser',
-        'callback_url': 'http://fu.bar'
+        'callback_url': 'http://fu.bar',
+        'WIF': 'wif',
+        'address': address,
+        'private_key': 'private',
+        'public_key': 'public',
+        'doctype': 'address',
+        '_id': address
       }
 
       storage.saveAddress(data, function (response) {
@@ -108,6 +115,7 @@ describe('integration - storage', function () {
     it('saves unprocessed address to database and fetches it back', function (done) {
       let storage = require('./../../models/storage')
       let data = {
+        'timestamp': Math.floor(Date.now() / 1000),
         'expect': 1,
         'currency': 'BTC',
         'exchange_rate': 1,
@@ -115,7 +123,8 @@ describe('integration - storage', function () {
         'message': 'message',
         'seller': 'testseller',
         'customer': 'testuser',
-        'callback_url': 'http://fu.bar'
+        'callback_url': 'http://fu.bar',
+        'doctype': 'address'
       }
 
       storage.saveAddress(data, function (response) {
