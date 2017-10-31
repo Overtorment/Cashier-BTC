@@ -27,16 +27,6 @@ exports.saveDocumentPromise = function (body) {
   })
 }
 
-exports.getAddress = function (address, callback) {
-  request.get(config.couchdb + '/' + address, function (error, response, body) {
-    if (error) {
-      return callback(false, error)
-    }
-
-    callback(JSON.parse(body))
-  })
-}
-
 exports.getAddressPromise = function (address) {
   return new Promise(function (resolve, reject) {
     request.get(config.couchdb + '/' + address, function (error, response, body) {

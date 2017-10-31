@@ -1,3 +1,12 @@
+// street magic
+process.on('uncaughtException', function (err) {
+  console.log('Exception: ', err)
+  console.log('\nStacktrace:')
+  console.log('====================')
+  console.log(err.stack)
+})
+
+
 /**
  * Cashier-BTC
  * -----------
@@ -57,5 +66,5 @@ function processJob (rows) {
         // confirmations till we can forward funds
       }
     }
-  })()
+  })().catch((err) => console.log(err))
 }

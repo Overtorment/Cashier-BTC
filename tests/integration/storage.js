@@ -27,7 +27,9 @@ describe('integration - storage', function () {
   describe('saveAddressPromise() && getAddressPromise()', function () {
     it('should save document with address data, and get it back', function (done) {
       let storage = require('./../../models/storage')
-      let address = 'test' + require('crypto').createHash('md5').update(Math.random().toString()).digest('hex')
+      let bitcore = require('bitcore-lib')
+      let privateKey = new bitcore.PrivateKey()
+      let address = (new bitcore.Address(privateKey.toPublicKey())).toString()
       let data = {
         'expect': 1,
         'currency': 'BTC',
@@ -64,8 +66,8 @@ describe('integration - storage', function () {
           assert.equal(data2.expect, data.expect)
           assert.equal(data2.doctype, 'address')
           done()
-        })
-      })
+        }).catch((err)=>console.log(err))
+      }).catch((err)=>console.log(err))
     })
   })
 
@@ -125,8 +127,11 @@ describe('integration - storage', function () {
     })
   })
 
-  describe('saveAddress() && getUnprocessedAdressesYoungerThan()', function () {
+  describe('saveAddressPromise() && getUnprocessedAdressesYoungerThan()', function () {
     it('saves unprocessed address to database and fetches it back', function (done) {
+      let bitcore = require('bitcore-lib')
+      let privateKey = new bitcore.PrivateKey()
+      let address = (new bitcore.Address(privateKey.toPublicKey())).toString()
       let storage = require('./../../models/storage')
       let data = {
         'timestamp': Math.floor(Date.now() / 1000),
@@ -138,7 +143,9 @@ describe('integration - storage', function () {
         'seller': 'testseller',
         'customer': 'testuser',
         'callback_url': 'http://fu.bar',
-        'doctype': 'address'
+        'doctype': 'address',
+        'address': address,
+        '_id': address
       }
 
       storage.saveAddressPromise(data).then(function (response) {
