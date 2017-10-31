@@ -16,12 +16,14 @@ exports.getDocumentPromise = function (docid) {
   return exports.getAddressPromise(docid) // since atm it does exactly the same
 }
 
-exports.saveDocument = function (body, callback) {
-  request.post(config.couchdb, { json: body }, function (error, response, body) {
-    if (error) {
-      return callback(false, body)
-    }
-    return callback(response.body)
+exports.saveDocumentPromise = function (body) {
+  return new Promise(function (resolve, reject) {
+    request.post(config.couchdb, { json: body }, function (error, response, body) {
+      if (error) {
+        return reject(body)
+      }
+      return resolve(response.body)
+    })
   })
 }
 
