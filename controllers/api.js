@@ -82,7 +82,19 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
 
     if (typeof responseBody.error !== 'undefined') { // seller doesnt exist
       console.log(req.id, 'seller doesnt exist. creating...')
-      let saveSellerResponse = await storage.saveSellerPromise(req.params.seller)
+      let privateKey = new bitcore.PrivateKey()
+      let address = new bitcore.Address(privateKey.toPublicKey())
+      let sellerData = {
+        'WIF': privateKey.toWIF(),
+        'address': address.toString(),
+        'private_key': privateKey.toString(),
+        'public_key': privateKey.toPublicKey().toString(),
+        'timestamp': Math.floor(Date.now() / 1000),
+        'seller': req.params.seller,
+        '_id': req.params.seller,
+        'doctype': 'seller'
+      }
+      let saveSellerResponse = await storage.saveSellerPromise(req.params.seller, sellerData)
       await bitcoind.importaddress(saveSellerResponse.address)
     } else { // seller exists
       console.log(req.id, 'seller already exists')

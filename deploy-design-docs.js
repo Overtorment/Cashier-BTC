@@ -27,7 +27,7 @@ fs.readdir('./_design_docs', function (err, designDocs) {
     if (err) {
       return console.log(err)
     }
-    storage.getDocument(json._id, function (doc) {
+    storage.getDocumentPromise(json._id).then(function (doc) {
       if (!doc || doc.error === 'not_found') {
         console.log(json._id + ' design doc needs to be created')
         storage.saveDocument(json, function (response, err) {

@@ -12,8 +12,8 @@ let bitcore = require('bitcore-lib')
 let config = require('../config')
 let rp = require('request-promise')
 
-exports.getDocument = function (docid, callback) {
-  return exports.getAddress(docid, callback) // since atm it does exactly the same
+exports.getDocumentPromise = function (docid) {
+  return exports.getAddressPromise(docid) // since atm it does exactly the same
 }
 
 exports.saveDocument = function (body, callback) {
@@ -47,16 +47,6 @@ exports.getAddressPromise = function (address) {
   })
 }
 
-exports.getSeller = function (sellerId, callback) {
-  request.get(config.couchdb + '/' + sellerId, function (error, response, body) {
-    if (error) {
-      return callback(false, error)
-    }
-
-    return callback(JSON.parse(body))
-  })
-}
-
 exports.getSellerPromise = function (sellerId) {
   return new Promise(function (resolve, reject) {
     request.get(config.couchdb + '/' + sellerId, function (error, response, body) {
@@ -66,15 +56,6 @@ exports.getSellerPromise = function (sellerId) {
 
       return resolve(JSON.parse(body))
     })
-  })
-}
-
-exports.saveAddress = function (body, callback) {
-  request.post(config.couchdb, { json: body }, function (error, response, body) {
-    if (error) {
-      return callback(false, body)
-    }
-    return callback(response.body)
   })
 }
 
@@ -106,44 +87,8 @@ exports.savePayout = function (body, callback) {
   })
 }
 
-exports.saveSeller = function (sellerId, callback) {
-  let privateKey = new bitcore.PrivateKey()
-  let address = new bitcore.Address(privateKey.toPublicKey())
-  let data = {
-    'WIF': privateKey.toWIF(),
-    'address': address.toString(),
-    'private_key': privateKey.toString(),
-    'public_key': privateKey.toPublicKey().toString(),
-    'timestamp': Math.floor(Date.now() / 1000),
-    'seller': sellerId,
-    '_id': sellerId,
-    'doctype': 'seller'
-  }
-
-  request.post(config.couchdb, { json: data }, function (error, response, body) {
-    if (error) {
-      return callback(false, body)
-    }
-    response.body.address = data.address
-    return callback(response.body)
-  })
-}
-
-exports.saveSellerPromise = function (sellerId) {
+exports.saveSellerPromise = function (sellerId, data) {
   return new Promise(function (resolve, reject) {
-    let privateKey = new bitcore.PrivateKey()
-    let address = new bitcore.Address(privateKey.toPublicKey())
-    let data = {
-      'WIF': privateKey.toWIF(),
-      'address': address.toString(),
-      'private_key': privateKey.toString(),
-      'public_key': privateKey.toPublicKey().toString(),
-      'timestamp': Math.floor(Date.now() / 1000),
-      'seller': sellerId,
-      '_id': sellerId,
-      'doctype': 'seller'
-    }
-
     request.post(config.couchdb, { json: data }, function (error, response, body) {
       if (error) {
         return reject(body)

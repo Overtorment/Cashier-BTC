@@ -5,10 +5,10 @@ let assert = require('assert')
 describe('integration - storage', function () {
   this.timeout(60000)
 
-  describe('getDocument()', function () {
+  describe('getDocumentPromise()', function () {
     it('should return any db document', function (done) {
       let storage = require('./../../models/storage')
-      storage.getDocument('_design/address', function (data) {
+      storage.getDocumentPromise('_design/address').then(function (data) {
         if (!data) throw new Error()
         assert.equal(data._id, '_design/address')
         assert.equal(data.language, 'javascript')
@@ -24,10 +24,10 @@ describe('integration - storage', function () {
     })
   })
 
-  describe('saveAddress() && getAddress()', function () {
+  describe('saveAddressPromise() && getAddressPromise()', function () {
     it('should save document with address data, and get it back', function (done) {
       let storage = require('./../../models/storage')
-      let address = 'test'+Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5)+Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5)
+      let address = 'test' + require('crypto').createHash('md5').update(Math.random().toString()).digest('hex')
       let data = {
         'expect': 1,
         'currency': 'BTC',
@@ -45,12 +45,12 @@ describe('integration - storage', function () {
         '_id': address
       }
 
-      storage.saveAddress(data, function (response) {
+      storage.saveAddressPromise(data).then(function (response) {
         assert.ok(response.ok)
         assert.ok(response.id)
 
                 // now fetching this document back
-        storage.getAddress(response.id, function (data2) {
+        storage.getAddressPromise(response.id).then(function (data2) {
           if (!data2) throw new Error()
           assert.equal(data2._id, response.id)
           assert.ok(data2.private_key)
@@ -79,7 +79,7 @@ describe('integration - storage', function () {
         assert.ok(response.id)
 
         // now fetching this document back
-        storage.getDocument(response.id, function (data2) {
+        storage.getDocumentPromise(response.id).then(function (data2) {
           if (!data2) throw new Error()
           assert.equal(data2.processed, 'payout_done')
           assert.equal(data2.doctype, 'payout')
@@ -89,14 +89,28 @@ describe('integration - storage', function () {
     })
   })
 
-  describe('saveSeller()', function () {
+  describe('saveSellerPromise()', function () {
     it('saves document with details on the seller', function (done) {
       let storage = require('./../../models/storage')
       let sellerId = require('crypto').createHash('md5').update(Math.random().toString()).digest('hex')
 
-      storage.saveSeller(sellerId, function (response) {
+      let bitcore = require('bitcore-lib')
+      let privateKey = new bitcore.PrivateKey()
+      let address = new bitcore.Address(privateKey.toPublicKey())
+      let data = {
+        'WIF': privateKey.toWIF(),
+        'address': address.toString(),
+        'private_key': privateKey.toString(),
+        'public_key': privateKey.toPublicKey().toString(),
+        'timestamp': Math.floor(Date.now() / 1000),
+        'seller': sellerId,
+        '_id': sellerId,
+        'doctype': 'seller'
+      }
+
+      storage.saveSellerPromise(sellerId, data).then(function (response) {
         // now fetching this document back
-        storage.getDocument(response.id, function (data2) {
+        storage.getDocumentPromise(response.id).then(function (data2) {
           if (!data2) throw new Error()
           assert.ok(data2.WIF)
           assert.ok(data2.address)
@@ -127,12 +141,12 @@ describe('integration - storage', function () {
         'doctype': 'address'
       }
 
-      storage.saveAddress(data, function (response) {
+      storage.saveAddressPromise(data).then(function (response) {
         assert.ok(response.ok)
         assert.ok(response.id)
 
         // now fetching this document back
-        storage.getAddress(response.id, function (data2) {
+        storage.getAddressPromise(response.id).then(function (data2) {
           if (!data2) throw new Error()
           assert.equal(data2._id, response.id)
           assert.ok(data2.timestamp)
