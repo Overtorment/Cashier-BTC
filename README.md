@@ -76,6 +76,7 @@ TODO
 * [ ] Stats
 * [ ] Better tests
 * [ ] CI
+* [ ] SegWit
 
 
 API

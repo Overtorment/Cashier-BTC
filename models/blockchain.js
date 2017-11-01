@@ -28,6 +28,16 @@ function getblockchaininfo () {
   return client.request('getblockchaininfo', [])
 }
 
+function listunspent (address) {
+  return client.request('listunspent', [0, 9999999, [address], true])
+}
+
+function broadcastTransaction (tx) {
+  return client.request('sendrawtransaction', [tx])
+}
+
 exports.importaddress = importaddress
 exports.getreceivedbyaddress = getreceivedbyaddress
 exports.getblockchaininfo = getblockchaininfo
+exports.listunspent = listunspent
+exports.broadcastTransaction = broadcastTransaction

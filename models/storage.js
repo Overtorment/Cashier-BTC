@@ -8,7 +8,6 @@
  **/
 
 let request = require('request')
-let bitcore = require('bitcore-lib')
 let config = require('../config')
 let rp = require('request-promise')
 

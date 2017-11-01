@@ -66,8 +66,8 @@ describe('integration - storage', function () {
           assert.equal(data2.expect, data.expect)
           assert.equal(data2.doctype, 'address')
           done()
-        }).catch((err)=>console.log(err))
-      }).catch((err)=>console.log(err))
+        }).catch((err) => console.log(err))
+      }).catch((err) => console.log(err))
     })
   })
 

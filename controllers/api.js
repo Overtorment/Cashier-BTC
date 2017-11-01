@@ -189,8 +189,4 @@ router.get('/get_seller_balance/:seller', function (req, res) {
   })
 })
 
-router.get('/get_address_confirmed_balance/:address', function (req, res) {
-  bitcoind.getreceivedbyaddress(req.params.address).then((responses) => res.send(JSON.stringify(responses[1].result)))
-})
-
 module.exports = router
