@@ -23,6 +23,7 @@ let bitcore = require('bitcore-lib')
 let config = require('../config')
 let bitcoind = require('../models/blockchain')
 let storage = require('../models/storage')
+let signer = require('../models/signer')
 
 router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callback_url', function (req, res) {
   let exchangeRate, btcToAsk, satoshiToAsk
@@ -135,38 +136,39 @@ router.get('/check_payment/:address', function (req, res) {
   })
 })
 
-router.get('/payout/:seller/:amount/:currency/:address', function (req, res) {
+router.get('/payout/:seller/:amount/:currency/:address', async function (req, res) {
   if (req.params.currency !== 'BTC') {
     return res.send(JSON.stringify({'error': 'bad currency'}))
   }
 
-  let satoshiToPay = Math.floor((req.params.amount / 1) * 100000000)
-  let btcToPay = satoshiToPay / 100000000
+  let btcToPay = req.params.amount
+  let seller = await storage.getSellerPromise(req.params.seller)
+  if (seller === false || typeof seller.error !== 'undefined') {
+    return res.send(JSON.stringify({'error': 'no such seller'}))
+  }
+  let received = await bitcoind.getreceivedbyaddress(seller.address)
 
-  storage.getSeller(req.params.seller, function (seller) { // checking if such seller exists
-    if (seller === false || typeof seller.error !== 'undefined') {
-      return res.send(JSON.stringify({'error': 'no such seller'}))
+  if (+received[1].result === +received[0].result && received[0].result >= btcToPay) { // balance is ok
+    let unspentOutputs = await bitcoind.listunspent(seller.address)
+    let tx = signer.createTransaction(unspentOutputs.result, req.params.address, btcToPay, 0.0002, seller.WIF)
+    let broadcastResult = await bitcoind.broadcastTransaction(tx)
+    console.log(req.id, 'sent', btcToPay, 'from', req.params.seller,'(', seller.address, ')', 'to', req.params.address)
+    console.log(req.id, JSON.stringify(response))
+    let data = {
+      'seller': req.params.seller,
+      'btc': btcToPay,
+      'tx': tx,
+      'transaction_result': broadcastResult,
+      'to_address': req.params.address,
+      'processed': 'payout_done',
+      'timestamp': Date.now(),
+      'doctype': 'payout'
     }
-
-    bitcoind.createTransaction(req.params.address, btcToPay - 0.0001 /* fee */, 0.0001, seller.WIF, function (txhex) {
-      bitcoind.broadcastTransaction(txhex, function (response) {
-        if (typeof response.error !== 'undefined') { // error
-          console.log(req.id, 'payout error:', response)
-          return res.send(response)
-        } else { // no error
-          console.log(req.id, 'sent ' + btcToPay + ' from ' + req.params.seller + ' (' + seller.address + ')' + ' to ' + req.params.address)
-          console.log(req.id, JSON.stringify(response))
-          let data = {
-            'seller': req.params.seller,
-            'btc': btcToPay,
-            'transaction_result': response,
-            'to_address': req.params.address
-          }
-          return storage.savePayout(data, function () { res.send(response) })
-        }
-      })
-    })
-  })
+    await storage.savePayoutPromise(data)
+    res.send(JSON.stringify(broadcastResult))
+  } else {
+    return res.send(JSON.stringify({'error': 'not enough balance'}))
+  }
 })
 
 router.get('/get_seller_balance/:seller', function (req, res) {

@@ -61,20 +61,15 @@ exports.saveAddressPromise = function (body) {
   })
 }
 
-exports.savePayout = function (body, callback) {
-  body.processed = 'payout_done'
-  body.timestamp = Math.floor(Date.now() / 1000)
-  body.doctype = 'payout'
-  request.post(config.couchdb, { json: body }, function (error, response, body) {
-    if (callback) {
+exports.savePayoutPromise = function (body) {
+  return new Promise(function(resolve, reject) {
+    request.post(config.couchdb, { json: body }, function (error, response, body) {
       if (error) {
-        return callback(false, body)
+        return reject(body)
       } else {
-        return callback(response.body)
+        return resolve(response.body)
       }
-    } else {
-      return false
-    }
+    })
   })
 }
 

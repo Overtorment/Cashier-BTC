@@ -6,7 +6,7 @@ describe('integration - storage', function () {
   this.timeout(60000)
 
   describe('getDocumentPromise()', function () {
-    it.only('should return any db document', async function () {
+    it('should return any db document', async function () {
       let storage = require('./../../models/storage')
       let data = await storage.getDocumentPromise('_design/address')
       assert.ok(data)
@@ -64,26 +64,6 @@ describe('integration - storage', function () {
           done()
         }).catch((err) => console.log(err))
       }).catch((err) => console.log(err))
-    })
-  })
-
-  describe('savePayout()', function () {
-    it('saves document with details on the payout', function (done) {
-      let storage = require('./../../models/storage')
-      let data = {}
-
-      storage.savePayout(data, function (response) {
-        assert.ok(response.ok)
-        assert.ok(response.id)
-
-        // now fetching this document back
-        storage.getDocumentPromise(response.id).then(function (data2) {
-          if (!data2) throw new Error()
-          assert.equal(data2.processed, 'payout_done')
-          assert.equal(data2.doctype, 'payout')
-          done()
-        })
-      })
     })
   })
 
