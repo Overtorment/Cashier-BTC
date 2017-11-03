@@ -94,8 +94,8 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
         '_id': req.params.seller,
         'doctype': 'seller'
       }
-      let saveSellerResponse = await storage.saveSellerPromise(req.params.seller, sellerData)
-      await bitcoind.importaddress(saveSellerResponse.address)
+      await storage.saveSellerPromise(req.params.seller, sellerData)
+      await bitcoind.importaddress(sellerData.address)
     } else { // seller exists
       console.log(req.id, 'seller already exists')
     }
