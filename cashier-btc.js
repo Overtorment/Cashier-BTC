@@ -68,7 +68,6 @@ setInterval(function () { updateExchangeRate('btceur') }, 5 * 60 * 1000)
 require('./smoke-test')
 require('./deploy-design-docs') // checking design docs in Couchdb
 
-
 let server = app.listen(config.port, function () {
   console.log('Listening on port %d', config.port)
 })

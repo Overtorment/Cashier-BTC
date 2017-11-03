@@ -152,8 +152,8 @@ router.get('/payout/:seller/:amount/:currency/:address', async function (req, re
     let unspentOutputs = await blockchain.listunspent(seller.address)
     let tx = signer.createTransaction(unspentOutputs.result, req.params.address, btcToPay, 0.0002, seller.WIF)
     let broadcastResult = await blockchain.broadcastTransaction(tx)
-    console.log(req.id, 'sent', btcToPay, 'from', req.params.seller,'(', seller.address, ')', 'to', req.params.address)
-    console.log(req.id, JSON.stringify(response))
+    console.log(req.id, 'sent', btcToPay, 'from', req.params.seller, '(', seller.address, ')', 'to', req.params.address)
+    console.log(req.id, 'broadcast result:', JSON.stringify(broadcastResult))
     let data = {
       'seller': req.params.seller,
       'btc': btcToPay,

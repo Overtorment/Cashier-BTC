@@ -37,6 +37,7 @@ function createTransaction (utxos, toAddress, amount, fixedFee, WIF) {
   return transaction.uncheckedSerialize()
 }
 
+/*
 function generateNewAddress () {
   // TODO
 
@@ -54,6 +55,6 @@ function URI () {
 
 function WIF2address () {
   // TODO
-}
+} */
 
 exports.createTransaction = createTransaction

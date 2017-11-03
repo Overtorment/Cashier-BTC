@@ -62,7 +62,7 @@ exports.saveAddressPromise = function (body) {
 }
 
 exports.savePayoutPromise = function (body) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     request.post(config.couchdb, { json: body }, function (error, response, body) {
       if (error) {
         return reject(body)
