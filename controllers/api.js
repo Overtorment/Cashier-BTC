@@ -46,7 +46,7 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
   let address = new bitcore.Address(privateKey.toPublicKey())
 
   let addressData = {
-    'timestamp': Math.floor(Date.now() / 1000),
+    'timestamp': Date.now(),
     'expect': req.params.expect,
     'currency': req.params.currency,
     'exchange_rate': exchangeRate,
@@ -90,7 +90,7 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
         'address': address.toString(),
         'private_key': privateKey.toString(),
         'public_key': privateKey.toPublicKey().toString(),
-        'timestamp': Math.floor(Date.now() / 1000),
+        'timestamp': Date.now(),
         'seller': req.params.seller,
         '_id': req.params.seller,
         'doctype': 'seller'

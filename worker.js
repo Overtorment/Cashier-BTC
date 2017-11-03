@@ -29,7 +29,7 @@ require('./smoke-test')
 
 function getJob () {
   return new Promise(function (resolve) {
-    storage.getUnprocessedAdressesYoungerThan(Math.floor(Date.now() / 1000) - config.process_unpaid_for_period, function (json) {
+    storage.getUnprocessedAdressesYoungerThan(Date.now() - config.process_unpaid_for_period, function (json) {
       return resolve(JSON.parse(json))
     })
   })

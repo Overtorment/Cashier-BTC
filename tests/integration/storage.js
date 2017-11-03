@@ -80,7 +80,7 @@ describe('integration - storage', function () {
         'address': address.toString(),
         'private_key': privateKey.toString(),
         'public_key': privateKey.toPublicKey().toString(),
-        'timestamp': Math.floor(Date.now() / 1000),
+        'timestamp': Date.now(),
         'seller': sellerId,
         '_id': sellerId,
         'doctype': 'seller'
@@ -110,7 +110,7 @@ describe('integration - storage', function () {
       let address = (new bitcore.Address(privateKey.toPublicKey())).toString()
       let storage = require('./../../models/storage')
       let data = {
-        'timestamp': Math.floor(Date.now() / 1000),
+        'timestamp': Date.now(),
         'expect': 1,
         'currency': 'BTC',
         'exchange_rate': 1,

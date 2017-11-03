@@ -29,7 +29,7 @@ require('./smoke-test')
 
 function getJob () {
   return new Promise(function (resolve) {
-    storage.getPaidAdressesYoungerThan(Math.floor(Date.now() / 1000) - config.process_paid_for_period, function (json) {
+    storage.getPaidAdressesYoungerThan(Date.now() - config.process_paid_for_period, function (json) {
       return resolve(JSON.parse(json))
     })
   })
@@ -55,7 +55,7 @@ async function processJob (rows) {
 
       json.processed = 'paid_and_sweeped'
       json.sweep_result = json.sweep_result || {}
-      json.sweep_result[+new Date()] = {
+      json.sweep_result[Date.now()] = {
         'tx': tx,
         'broadcast': broadcastResult
       }
