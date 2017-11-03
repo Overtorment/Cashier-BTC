@@ -9,7 +9,10 @@
 
 let config = require('../config')
 let jayson = require('jayson/promise')
-let client = jayson.client.http(config.bitcoind.rpc)
+let url = require('url')
+let rpc = url.parse(config.bitcoind.rpc)
+rpc.timeout = 5000
+let client = jayson.client.http(rpc)
 
 function importaddress (address) {
   return client.request('importaddress', [address, address, false])

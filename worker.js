@@ -18,6 +18,8 @@ let storage = require('./models/storage')
 let blockchain = require('./models/blockchain')
 let config = require('./config')
 
+require('./smoke-test')
+
 ;(async () => {
   while (1) {
     console.log('.')
@@ -47,6 +49,7 @@ async function processJob (rows) {
       ) {
         // paid ok
       json.processed = 'paid'
+      json.paid_on = Date.now()
       await storage.saveJobResultsPromise(json)
       console.log('firing callback: ' + json.callback_url)
       await rp({ uri: json.callback_url, timeout: 10 * 1000 })

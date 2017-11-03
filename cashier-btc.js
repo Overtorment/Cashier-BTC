@@ -33,8 +33,8 @@ let https = require('https')
 app.use(bodyParser.urlencoded({ extended: false })) // parse application/x-www-form-urlencoded
 app.use(bodyParser.json(null)) // parse application/json
 
-global.btcUsd = 6000 // initial
-global.btcEur = 5000
+global.btcUsd = 7000 // initial
+global.btcEur = 6000
 
 app.use('/qr', express.static('qr'))
 app.use(require('./controllers/api'))
@@ -65,7 +65,9 @@ updateExchangeRate('btceur')
 setInterval(function () { updateExchangeRate('btcusd') }, 5 * 60 * 1000)
 setInterval(function () { updateExchangeRate('btceur') }, 5 * 60 * 1000)
 
+require('./smoke-test')
 require('./deploy-design-docs') // checking design docs in Couchdb
+
 
 let server = app.listen(config.port, function () {
   console.log('Listening on port %d', config.port)

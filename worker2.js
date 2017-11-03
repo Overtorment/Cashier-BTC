@@ -8,7 +8,7 @@
  **/
 
 /**
- * worker iterates through all paid addresses,
+ * worker iterates through all paid addresses (which are actually hot wallets),
  * and sweeps (forwards funds) to seller final (aggregational) wallet
  *
  */
@@ -17,6 +17,8 @@ let storage = require('./models/storage')
 let config = require('./config')
 let blockchain = require('./models/blockchain')
 let signer = require('./models/signer')
+
+require('./smoke-test')
 
 ;(async () => {
   while (1) {
@@ -43,7 +45,7 @@ async function processJob (rows) {
     let received = await blockchain.getreceivedbyaddress(json.address)
     console.log('address:', json.address, 'expect:', json.btc_to_ask, 'confirmed:', received[1].result, 'unconfirmed:', received[0].result)
 
-    if (1 || +received[1].result === +received[0].result) { // balance is ok, need to transfer it
+    if (+received[1].result === +received[0].result && received[0].result > 0) { // balance is ok, need to transfer it
       let seller = await storage.getSellerPromise(json.seller)
       console.log('transferring', received[0].result, 'BTC (minus fee) from', json.address, 'to seller\'s address', seller.address)
       let unspentOutputs = await blockchain.listunspent(json.address)
