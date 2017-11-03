@@ -6,21 +6,17 @@ describe('integration - storage', function () {
   this.timeout(60000)
 
   describe('getDocumentPromise()', function () {
-    it('should return any db document', function (done) {
+    it.only('should return any db document', async function () {
       let storage = require('./../../models/storage')
-      storage.getDocumentPromise('_design/address').then(function (data) {
-        if (!data) throw new Error()
-        assert.equal(data._id, '_design/address')
-        assert.equal(data.language, 'javascript')
-        assert.ok(data.views.all_by_customer_and_timestamp, 'all_by_customer_and_timestamp')
-        assert.ok(data.views.unprocessed_by_timestamp, 'unprocessed_by_timestamp')
-        assert.ok(data.views.unpaid_by_timestamp, 'unpaid_by_timestamp')
-        assert.ok(data.views.paid_by_timestamp, 'paid_by_timestamp')
-        assert.ok(data.views.paid_and_sweeped_by_timestamp, 'paid_and_sweeped_by_timestamp')
-        assert.ok(data.views.processing_by_timestamp, 'processing_by_timestamp')
-        assert.ok(data.views.total_by_seller, 'total_by_seller')
-        done()
-      })
+      let data = await storage.getDocumentPromise('_design/address')
+      assert.ok(data)
+      assert.equal(data._id, '_design/address')
+      assert.equal(data.language, 'javascript')
+      assert.ok(data.views.all_by_customer_and_timestamp, 'all_by_customer_and_timestamp')
+      assert.ok(data.views.unprocessed_by_timestamp, 'unprocessed_by_timestamp')
+      assert.ok(data.views.paid_by_timestamp, 'paid_by_timestamp')
+      assert.ok(data.views.paid_and_sweeped_by_timestamp, 'paid_and_sweeped_by_timestamp')
+      assert.ok(data.views.total_by_seller, 'total_by_seller')
     })
   })
 
