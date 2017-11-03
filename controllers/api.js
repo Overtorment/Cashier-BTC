@@ -21,7 +21,7 @@ let express = require('express')
 let router = express.Router()
 let bitcore = require('bitcore-lib')
 let config = require('../config')
-let bitcoind = require('../models/blockchain')
+let blockchain = require('../models/blockchain')
 let storage = require('../models/storage')
 let signer = require('../models/signer')
 
@@ -96,14 +96,14 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
         'doctype': 'seller'
       }
       await storage.saveSellerPromise(req.params.seller, sellerData)
-      await bitcoind.importaddress(sellerData.address)
+      await blockchain.importaddress(sellerData.address)
     } else { // seller exists
       console.log(req.id, 'seller already exists')
     }
 
     console.log(req.id, 'saveAddress()', JSON.stringify(addressData))
     await storage.saveAddressPromise(addressData)
-    await bitcoind.importaddress(addressData.address)
+    await blockchain.importaddress(addressData.address)
 
     res.send(JSON.stringify(answer))
   })().catch((error) => {
@@ -114,7 +114,7 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
 
 router.get('/check_payment/:address', function (req, res) {
   let promises = [
-    bitcoind.getreceivedbyaddress(req.params.address),
+    blockchain.getreceivedbyaddress(req.params.address),
     storage.getAddressPromise(req.params.address)
   ]
 
@@ -146,12 +146,12 @@ router.get('/payout/:seller/:amount/:currency/:address', async function (req, re
   if (seller === false || typeof seller.error !== 'undefined') {
     return res.send(JSON.stringify({'error': 'no such seller'}))
   }
-  let received = await bitcoind.getreceivedbyaddress(seller.address)
+  let received = await blockchain.getreceivedbyaddress(seller.address)
 
   if (+received[1].result === +received[0].result && received[0].result >= btcToPay) { // balance is ok
-    let unspentOutputs = await bitcoind.listunspent(seller.address)
+    let unspentOutputs = await blockchain.listunspent(seller.address)
     let tx = signer.createTransaction(unspentOutputs.result, req.params.address, btcToPay, 0.0002, seller.WIF)
-    let broadcastResult = await bitcoind.broadcastTransaction(tx)
+    let broadcastResult = await blockchain.broadcastTransaction(tx)
     console.log(req.id, 'sent', btcToPay, 'from', req.params.seller,'(', seller.address, ')', 'to', req.params.address)
     console.log(req.id, JSON.stringify(response))
     let data = {
@@ -179,7 +179,7 @@ router.get('/get_seller_balance/:seller', function (req, res) {
       return res.send(JSON.stringify({'error': 'no such seller'}))
     }
 
-    let responses = await bitcoind.getreceivedbyaddress(seller.address)
+    let responses = await blockchain.getreceivedbyaddress(seller.address)
     let answer = {
       'btc_actual': responses[1].result,
       'btc_unconfirmed': responses[0].result
