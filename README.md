@@ -85,7 +85,7 @@ API
 GET /request_payment/:expect/:currency/:message/:seller/:customer/:callback_url
 --------------------------------------------------------------------------------------------------------
 
-Create a request to pay, supported currencies BTC, USD, EUR. Non-btc currency is converted to btc using current rate from bitstamp.com.
+Create a request to pay, supported currencies: BTC, USD, EUR. Non-btc currency is converted to btc using current rate from bitstamp.com.
 Returns a json document with QR code to be displayed to the payer, and a unique address for that particular payment (you can use it as invoice id).
 Message will be displayed to the client (for example, you can write "Payment for goods"). Seller and customer - system field, here you can
 write the application that created the request and the payer id. Keep Seller field private, it is also used for payouts.
@@ -132,9 +132,10 @@ GET /payout/:seller/:amount/:currency/:address
 -------------------------------------------------------------
 
 Transfer funds from aggregated seller's address to some other address.
-Supported currencies BTC, USD, EUR.
+Supported currencies: BTC.
 There's no additional sequrity here, it is presumed that the %seller% identifier is kept secret.
-You might want to disable this call for security reasons.
+You might want to disable this call for security reasons (or manually replace seller's address in 
+database with the one you control).
 
 	Example
 
@@ -142,7 +143,7 @@ You might want to disable this call for security reasons.
 
 	Response
 
-		If successfull, json document with transaction details (txid, txhex, etc)
+		If successfull, json document with transaction details (txid etc)
 
 
 GET /get_seller_balance/:seller
