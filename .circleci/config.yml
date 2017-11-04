@@ -29,6 +29,7 @@ jobs:
             sudo apt-get install --yes python-software-properties python g++ make
             sudo apt-get install -y erlang-dev erlang-manpages erlang-base-hipe erlang-eunit erlang-nox erlang-xmerl erlang-inets
             sudo apt-get install -y libmozjs185-dev libicu-dev libcurl4-gnutls-dev libtool
+            cd ~/
             wget http://ftp.fau.de/apache/couchdb/source/1.6.1/apache-couchdb-1.6.1.tar.gz
             tar xvzf apache-couchdb-*
             cd apache-couchdb-*
@@ -52,8 +53,6 @@ jobs:
             cd ~/Cashier-BTC
             wget https://bitcoin.org/bin/bitcoin-core-0.15.0.1/bitcoin-0.15.0.1-x86_64-linux-gnu.tar.gz
             tar -xvf  bitcoin-0.15.0.1-x86_64-linux-gnu.tar.gz
-            cd bitcoin-0.15.0/
-            mkdir datadir
 
       - run:
           name: Running bitcoind in background...
