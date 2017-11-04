@@ -25,7 +25,6 @@ jobs:
             npm install
             cp config.js.dev config.js
             pwd
-            lsb_release -a
             echo "deb https://apache.bintray.com/couchdb-deb trusty main" | sudo tee -a /etc/apt/sources.list
             curl -L https://couchdb.apache.org/repo/bintray-pubkey.asc | sudo apt-key add -
             sudo apt-get install apt-transport-https -y
