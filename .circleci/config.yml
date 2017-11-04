@@ -46,11 +46,11 @@ jobs:
             sudo ln -s /usr/local/etc/init.d/couchdb couchdb || true
             sudo /etc/init.d/couchdb start || true
             sudo update-rc.d couchdb defaults || true
-            curl http://127.0.0.1:5984/ || true
             sudo service couchdb restart || true
+            curl http://127.0.0.1:5984/ || true
 
-            curl -s -X PUT http://localhost:5984/_config/admins/user -d '"pass"'
-            curl -s -X PUT http://user:pass@localhost:5984/cashier-btc
+            curl -s -X PUT http://localhost:5984/_config/admins/user -d '"pass"' || true
+            curl -s -X PUT http://user:pass@localhost:5984/cashier-btc || true
             wget https://bitcoin.org/bin/bitcoin-core-0.15.0.1/bitcoin-0.15.0.1-x86_64-linux-gnu.tar.gz
             tar -xvf  bitcoin-0.15.0.1-x86_64-linux-gnu.tar.gz
             cd bitcoin-0.15.0/
