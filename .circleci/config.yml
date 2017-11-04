@@ -24,7 +24,8 @@ jobs:
             echo Setting up
             npm install
             cp config.js.dev config.js
-            sudo apt-get install couchdb
+            pwd
+            sudo apt-get update; sudo apt-get install couchdb
             curl -s -X PUT http://localhost:5984/_config/admins/user -d '"pass"'
             curl -s -X PUT http://user:pass@localhost:5984/cashier-btc
             wget https://bitcoin.org/bin/bitcoin-core-0.15.0.1/bitcoin-0.15.0.1-x86_64-linux-gnu.tar.gz
