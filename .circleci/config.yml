@@ -24,13 +24,11 @@ jobs:
             echo Setting up
             npm install
             cp config.js.dev config.js
-            pwd
 
             sudo apt-get install --yes build-essential curl git
             sudo apt-get install --yes python-software-properties python g++ make
             sudo apt-get install -y erlang-dev erlang-manpages erlang-base-hipe erlang-eunit erlang-nox erlang-xmerl erlang-inets
             sudo apt-get install -y libmozjs185-dev libicu-dev libcurl4-gnutls-dev libtool
-            cd /tmp
             wget http://ftp.fau.de/apache/couchdb/source/1.6.1/apache-couchdb-1.6.1.tar.gz
             tar xvzf apache-couchdb-*
             cd apache-couchdb-*
@@ -47,10 +45,11 @@ jobs:
             sudo /etc/init.d/couchdb start || true
             sudo update-rc.d couchdb defaults || true
             sudo service couchdb restart || true
+            sleep 5
             curl http://127.0.0.1:5984/ || true
-
             curl -s -X PUT http://localhost:5984/_config/admins/user -d '"pass"' || true
             curl -s -X PUT http://user:pass@localhost:5984/cashier-btc || true
+            cd ~/Cashier-BTC
             wget https://bitcoin.org/bin/bitcoin-core-0.15.0.1/bitcoin-0.15.0.1-x86_64-linux-gnu.tar.gz
             tar -xvf  bitcoin-0.15.0.1-x86_64-linux-gnu.tar.gz
             cd bitcoin-0.15.0/
