@@ -75,15 +75,15 @@ TODO
 * [ ] Better logging & error handling
 * [ ] Stats
 * [ ] Better tests
-* [ ] CI
+* ~~[V] CI~~
 * [ ] SegWit
 
 
 API
 ===
 
-GET /request_payment/:expect/:currency/:message/:seller/:customer/:callback_url
---------------------------------------------------------------------------------------------------------
+###GET /request_payment/:expect/:currency/:message/:seller/:customer/:callback_url
+
 
 Create a request to pay, supported currencies: BTC, USD, EUR. Non-btc currency is converted to btc using current rate from bitstamp.com.
 Returns a json document with QR code to be displayed to the payer, and a unique address for that particular payment (you can use it as invoice id).
@@ -107,8 +107,8 @@ Callback_url will be requested once the invoice is paid.
 Link can be opened by the payer, there is a chance it will be handled by his bitcoin wallet.
 QR whoud be shown to payer as well. Duplicate it with text, like, dear user, please pay the %expect% amount to %address%.
 
-GET /check_payment/:address
----------------------------------------
+###GET /check_payment/:address
+
 
 Check payment by a unique address received in the "request_payment" call.
 
@@ -128,8 +128,8 @@ Check payment by a unique address received in the "request_payment" call.
 Using difference between "btc_expected" and "btc_actual" you can judge whether payment request (invoice) was paid.
 
 
-GET /payout/:seller/:amount/:currency/:address
--------------------------------------------------------------
+###GET /payout/:seller/:amount/:currency/:address
+
 
 Transfer funds from aggregated seller's address to some other address.
 Supported currencies: BTC.
@@ -146,8 +146,8 @@ database with the one you control).
 		If successfull, json document with transaction details (txid etc)
 
 
-GET /get_seller_balance/:seller
----------------------------------------
+###GET /get_seller_balance/:seller
+
 
 Check the total balance of seller's aggregated address.
 
