@@ -57,12 +57,12 @@ jobs:
 
       - run:
           name: Running bitcoind in background...
-          command: ./bin/bitcoind -rpcuser=user  -rpcpassword=pass -rpcbind=0.0.0.0  -rpcallowip=127.0.0.1 -datadir=./datadir/
+          command: ~/Cashier-BTC/bitcoin-0.15.0/bin/bitcoind -rpcuser=user  -rpcpassword=pass -rpcbind=0.0.0.0  -rpcallowip=127.0.0.1 -datadir=./datadir/
           background: true
 
       - run: sleep 60
 
       # run tests!
-      - run: npm test
+      - run: cd ~/Cashier-BTC; npm test
 
 
