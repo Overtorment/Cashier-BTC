@@ -1,6 +1,7 @@
 /* global describe, it, beforeEach, afterEach */
 
 let rp = require('request-promise')
+let assert = require('assert')
 
 let reRequire = function (module) {
   delete require.cache[require.resolve(module)]
@@ -147,6 +148,29 @@ describe('acceptance - loading express', function () {
         })
       })
       .expect(301, done)
+  })
+
+  it('returns unprocessed documents ok', function (done) {
+    let seller = 'testseller-' + Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5)
+    request(server)
+      .get('/request_payment/0.001/BTC/testmessage/' + seller + '/testcustomer/http%3A%2F%2Ftesturl.com%2F')
+      .expect(200, function () {
+        let storage = require('../../models/storage')
+        storage.getUnprocessedAdressesYoungerThan(3 * 1000 /* 3 sec */, function (json) {
+          let rows = JSON.parse(json)
+          rows = rows || {}
+          rows.rows = rows.rows || []
+          let found = false
+          for (const row of rows.rows) {
+            let doc = row.doc
+            if (doc.seller === seller) {
+              found = true
+            }
+          }
+          assert.ok(found)
+          done()
+        })
+      })
   })
 
   it('responds to /check_payment/:address', function (done) {
