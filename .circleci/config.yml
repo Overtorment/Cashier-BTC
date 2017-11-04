@@ -19,25 +19,11 @@ jobs:
     steps:
       - checkout
 
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "package.json" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
-
-      - run:
-          npm install
-          cp config.js.dev config.js
-
-      - save_cache:
-          paths:
-            - node_modules
-          key: v1-dependencies-{{ checksum "package.json" }}
-
       - run:
           command: |
             echo Setting up
+            npm install
+            cp config.js.dev config.js
             sudo apt-get install couchdb
             curl -s -X PUT http://localhost:5984/_config/admins/user -d '"pass"'
             curl -s -X PUT http://user:pass@localhost:5984/cashier-btc
@@ -51,10 +37,7 @@ jobs:
           command: ./bin/bitcoind -rpcuser=user  -rpcpassword=pass -rpcbind=0.0.0.0  -rpcallowip=127.0.0.1 -datadir=./datadir/
           background: true
 
-      - run:
-          sleep 60
-
-
+      - run: sleep 60
 
       # run tests!
       - run: npm test
