@@ -31,7 +31,7 @@ jobs:
             sudo apt-get install -y erlang-dev erlang-manpages erlang-base-hipe erlang-eunit erlang-nox erlang-xmerl erlang-inets
             sudo apt-get install -y libmozjs185-dev libicu-dev libcurl4-gnutls-dev libtool
             cd /tmp
-            wget http://ftp.fau.de/apache/couchdb/source/2.1.0/apache-couchdb-2.1.0.tar.gz
+            wget http://ftp.fau.de/apache/couchdb/source/1.6.1/apache-couchdb-1.6.1.tar.gz
             tar xvzf apache-couchdb-*
             cd apache-couchdb-*
             ./configure && make
