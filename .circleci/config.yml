@@ -27,6 +27,7 @@ jobs:
             pwd
             echo "deb https://apache.bintray.com/couchdb-deb xenial main" | sudo tee -a /etc/apt/sources.list
             curl -L https://couchdb.apache.org/repo/bintray-pubkey.asc | sudo apt-key add -
+            sudo apt-get install apt-transport-https -y
             sudo apt-get update && sudo apt-get install couchdb
             curl -s -X PUT http://localhost:5984/_config/admins/user -d '"pass"'
             curl -s -X PUT http://user:pass@localhost:5984/cashier-btc
