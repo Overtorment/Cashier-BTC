@@ -3,6 +3,8 @@
 let assert = require('assert')
 
 describe('integration - storage', function () {
+  this.timeout(60000)
+
   describe('getblockchaininfo RPC call', function () {
     it('should return info', function (done) {
       let blockchain = require('./../../models/blockchain')
