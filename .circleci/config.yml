@@ -25,10 +25,30 @@ jobs:
             npm install
             cp config.js.dev config.js
             pwd
-            
-            curl -L https://couchdb.apache.org/repo/bintray-pubkey.asc | sudo apt-key add -
-            sudo apt-get install apt-transport-https -y
-            sudo apt-get update && sudo apt-get install couchdb
+
+            sudo apt-get update
+            sudo apt-get -y install build-essential erlang-base-hipe erlang-dev erlang-manpages erlang-eunit erlang-nox libicu-dev libmozjs185-dev libcurl4-openssl-dev
+            wget http://mirrors.advancedhosters.com/apache/couchdb/source/1.6.1/apache-couchdb-1.6.1.tar.gz
+            tar -zxvf apache-couchdb-*.tar.gz
+            cd apache*
+            ./configure
+            make && sudo make install
+            sudo adduser --disabled-login --disabled-password --no-create-home --gecos "" couchdb
+            sudo chown -R couchdb:couchdb /usr/local/var/lib/couchdb
+            sudo chown -R couchdb:couchdb /usr/local/var/log/couchdb
+            sudo chown -R couchdb:couchdb /usr/local/var/run/couchdb
+            sudo chown -R couchdb:couchdb /usr/local/etc/couchdb
+            sudo chmod 0770 /usr/local/var/lib/couchdb/
+            sudo chmod 0770 /usr/local/var/log/couchdb/
+            sudo chmod 0770 /usr/local/var/run/couchdb/
+            sudo chmod 0770 /usr/local/etc/couchdb/*.ini
+            sudo chmod 0770 /usr/local/etc/couchdb/*.d
+            sudo ln -s /usr/local/etc/logrotate.d/couchdb /etc/logrotate.d/couchdb
+            sudo ln -s /usr/local/etc/init.d/couchdb /etc/init.d
+            sudo update-rc.d couchdb defaults# BOOM, we're done!# Another way to accomplish this: https://github.com/pixelpark/ppnet/wiki/Install-CouchDB-1.6.1-on-Ubuntu-14.04
+
+
+
             curl -s -X PUT http://localhost:5984/_config/admins/user -d '"pass"'
             curl -s -X PUT http://user:pass@localhost:5984/cashier-btc
             wget https://bitcoin.org/bin/bitcoin-core-0.15.0.1/bitcoin-0.15.0.1-x86_64-linux-gnu.tar.gz
