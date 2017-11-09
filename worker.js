@@ -44,8 +44,8 @@ async function processJob (rows) {
     let received = await blockchain.getreceivedbyaddress(json.address)
     console.log('address:', json.address, 'expect:', json.btc_to_ask, 'confirmed:', received[1].result, 'unconfirmed:', received[0].result)
     if (
-        (json.btc_to_ask >= config.small_amount_threshhold && (received[1].result >= json.btc_to_ask)) ||
-        (json.btc_to_ask < config.small_amount_threshhold && (received[0].result >= json.btc_to_ask))
+        (json.btc_to_ask > config.small_amount_threshhold && (received[1].result >= json.btc_to_ask)) ||
+        (json.btc_to_ask <= config.small_amount_threshhold && (received[0].result >= json.btc_to_ask))
       ) {
         // paid ok
       json.processed = 'paid'

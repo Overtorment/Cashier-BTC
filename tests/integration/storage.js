@@ -70,7 +70,7 @@ describe('integration - storage', function () {
   describe('saveSellerPromise()', function () {
     it('saves document with details on the seller', function (done) {
       let storage = require('./../../models/storage')
-      let sellerId = require('crypto').createHash('md5').update(Math.random().toString()).digest('hex')
+      let sellerId = 'testseller-' + require('crypto').createHash('md5').update(Math.random().toString()).digest('hex')
 
       let bitcore = require('bitcore-lib')
       let privateKey = new bitcore.PrivateKey()
