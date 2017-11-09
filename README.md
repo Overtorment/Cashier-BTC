@@ -1,14 +1,18 @@
 Cashier-BTC
 ===================
 
-[![JavaScript Style Guide](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
+v2 refactored and improved, battle-tested
+-----------------------------------------
+
+[![JavaScript Style Guide](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/) Tests: [![CircleCI](https://circleci.com/gh/Overtorment/Cashier-BTC/tree/v2.svg?style=svg)](https://circleci.com/gh/Overtorment/Cashier-BTC/tree/v2)
 
 Self-hosted Node.js Bitcoin payment gateway. Provides REST API for anyone who wants to accept bitcoin.
 Request payments (invoicing), check payments (whether invoice is paid), receive callbacks if payment is made.
 Aggregate funds on final (aggregational) address.
-Depends on Bitcore, Couchdb for storage.
+Depends on Nodejs v8+, Bitcoin Core, Couchdb for storage.
 
 * Simple
+* Autonomous (works though self-hosted Bitcoin Core node)
 * Transactions are signed locally. No private keys leak
 * Battle-tested in production: 50+ BTC turnover already
 
@@ -22,13 +26,13 @@ $ npm install
 $ cp config.js.dev config.js
 ```
 
-* Install [Bitcore full node and Bitcore Insight API](https://github.com/bitpay/insight-api)
-* Install Couchdb (install one if needed, or use https://cloudant.com)
+* Install [Bitcoin Core](BITCOIN-CORE-INSTALL.md)
+* Install Couchdb (or use [https://cloudant.com](https://cloudant.com))
 
-Edit config.js:
+Edit `config.js`:
 
 * Point it to a new Couchdb database
-* Point it to a Bitcore server
+* Point it to a Bitcoin Core RPC server
 
 Tests
 -----
@@ -46,9 +50,9 @@ $ nodejs worker.js
 $ nodejs worker2.js
 ```
 
-Open http://localhost:2222 in browser, you should see 'Cashier-BTC reporting for duty'.
+Open [http://localhost:2222](http://localhost:2222) in browser, you should see 'Cashier-BTC reporting for duty'.
 That's it, ready to use.
-Use tools like supervisord or foreverjs to keep it running.
+Use tools like `supervisord` or `foreverjs` to keep it running.
 
 License
 -------
@@ -64,28 +68,28 @@ Igor Korsakov
 TODO
 ----
 
-* ~~[V] Get rid of Chain and leave Bitcore only~~
-* [ ] Add options to work through bitcoind and other bitcoin network endpoints
-* ~~[V] Add tests~~
-* ~~[V] Better abstractioning (add more abstraction layers)~~
+* [x] ~~Get rid of Chain and leave Bitcore only~~
+* [x] ~~Add options to work through bitcoind and other bitcoin network endpoints~~
+* [x] ~~Add tests~~
+* [x] ~~Better abstractioning (add more abstraction layers)~~
 * [ ] Better logging & error handling
 * [ ] Stats
-
+* [ ] Better tests
+* [x] ~~CI~~
+* [ ] SegWit
 
 
 API
 ===
 
-GET /request_payment/:expect/:currency/:message/:seller/:customer/:callback_url
---------------------------------------------------------------------------------------------------------
+### GET /request_payment/:expect/:currency/:message/:seller/:customer/:callback_url
 
-Create a request to pay, supported currencies BTC, USD, EUR. Non-btc currency is converted to btc using current rate from btc-e.com.
+
+Create a request to pay, supported currencies: BTC, USD, EUR. Non-btc currency is converted to btc using current rate from bitstamp.com.
 Returns a json document with QR code to be displayed to the payer, and a unique address for that particular payment (you can use it as invoice id).
-Message will be displayed to the client (for example, you can write "Payment for goods"). Seller and customer - system field, here you can 
-write the application that created the request and the payer id.
+Message will be displayed to the client (for example, you can write "Payment for goods"). Seller and customer - system field, here you can
+write the application that created the request and the payer id. Keep Seller field private, it is also used for payouts.
 Callback_url will be requested once the invoice is paid.
-
-
 
 	Example
 
@@ -103,11 +107,8 @@ Callback_url will be requested once the invoice is paid.
 Link can be opened by the payer, there is a chance it will be handled by his bitcoin wallet.
 QR whoud be shown to payer as well. Duplicate it with text, like, dear user, please pay the %expect% amount to %address%.
 
+### GET /check_payment/:address
 
-
-
-GET /check_payment/:address
----------------------------------------
 
 Check payment by a unique address received in the "request_payment" call.
 
@@ -127,13 +128,14 @@ Check payment by a unique address received in the "request_payment" call.
 Using difference between "btc_expected" and "btc_actual" you can judge whether payment request (invoice) was paid.
 
 
-GET /payout/:seller/:amount/:currency/:address
--------------------------------------------------------------
+### GET /payout/:seller/:amount/:currency/:address
+
 
 Transfer funds from aggregated seller's address to some other address.
-Supported currencies BTC, USD, EUR.
+Supported currencies: BTC.
 There's no additional sequrity here, it is presumed that the %seller% identifier is kept secret.
-You might want to disable this call for security reasons.
+You might want to disable this call for security reasons (or manually replace seller's address in 
+database with the one you control).
 
 	Example
 
@@ -141,15 +143,11 @@ You might want to disable this call for security reasons.
 
 	Response
 
-		If successfull, json document with transaction details (txid, txhex, etc)
+		If successfull, json document with transaction details (txid etc)
 
 
+### GET /get_seller_balance/:seller
 
-
-
-
-GET /get_seller_balance/:seller
----------------------------------------
 
 Check the total balance of seller's aggregated address.
 

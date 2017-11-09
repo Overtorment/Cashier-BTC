@@ -3,56 +3,44 @@
  * -----------
  * Self-hosted bitcoin payment gateway
  *
- * License: WTFPL
- * Author: Igor Korsakov
- * */
+ * https://github.com/Overtorment/Cashier-BTC
+ *
+ **/
 
-var bitcore = require('bitcore-lib')
+let config = require('../config')
+let jayson = require('jayson/promise')
+let url = require('url')
+let rpc = url.parse(config.bitcoind.rpc)
+rpc.timeout = 5000
+let client = jayson.client.http(rpc)
 
-var provider = require('../models/provider/bitcore')
+function importaddress (address) {
+  return client.request('importaddress', [address, address, false])
+}
 
-exports.createTransaction = function (toAddress, btcAmount, minerFee, WIF, callback) {
-  if (minerFee === false) minerFee = 0.0001
-  var pk = new bitcore.PrivateKey.fromWIF(WIF) // eslint-disable-line new-cap
-  var fromAddress = (pk.toPublicKey()).toAddress(bitcore.Networks.livenet)
-  var totalSatoshis = 0
+function getreceivedbyaddress (address) {
+  let reqs = [
+    client.request('getreceivedbyaddress', [address, 0]),
+    client.request('getreceivedbyaddress', [address, 3])
+  ]
 
-  var transaction = new bitcore.Transaction()
+  return Promise.all(reqs)
+}
 
-  provider.fetchTransactionsByAddress(fromAddress, function (txs) {
-    for (var i = 0, l = txs.length; i < l; i++) { // iterating all transactions on that address
-      var out = false
+function getblockchaininfo () {
+  return client.request('getblockchaininfo', [])
+}
 
-      for (var ii = 0, ll = txs[i].out.length; ii < ll; ii++) { // iterating all outs on transaction to find then one we own (fromAddress)
-        if (txs[i].out[ii].addr === fromAddress.toString() && typeof txs[i].out[ii].spent_by === 'undefined') {
-          out = txs[i].out[ii]
-        }
-      } // end for
+function listunspent (address) {
+  return client.request('listunspent', [0, 9999999, [address], true])
+}
 
-      if (!out) continue
+function broadcastTransaction (tx) {
+  return client.request('sendrawtransaction', [tx])
+}
 
-      transaction.from({ 'address': fromAddress,
-        'txid': txs[i].hash,
-        'vout': out.n,
-        'scriptPubKey': out.script,
-        'satoshis': out.value
-      })
-
-      totalSatoshis += out.value
-
-      if (totalSatoshis >= (parseInt(btcAmount * 100000000) + parseInt(minerFee * 100000000))) break // we have enough outs
-    } // end for
-
-    transaction
-                .to(toAddress, parseInt(btcAmount * 100000000))
-                .fee(parseInt(minerFee * 100000000))
-                .change(fromAddress)
-                .sign(pk)
-
-    callback(transaction)
-  }) // end fetch transactions
-}//  end createTransaction
-
-exports.getAddress = provider.getAddress
-exports.fetchTransactionsByAddress = provider.fetchTransactionsByAddress
-exports.broadcastTransaction = provider.broadcastTransaction
+exports.importaddress = importaddress
+exports.getreceivedbyaddress = getreceivedbyaddress
+exports.getblockchaininfo = getblockchaininfo
+exports.listunspent = listunspent
+exports.broadcastTransaction = broadcastTransaction

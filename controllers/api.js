@@ -16,111 +16,18 @@
 
 /* global btcUsd */
 /* global btcEur */
-/* global sellers:true */
 
-var express = require('express')
-var router = express.Router()
-var bitcore = require('bitcore-lib')
-var config = require('../config')
-var blockchain = require('../models/blockchain')
-var storage = require('../models/storage')
+let express = require('express')
+let router = express.Router()
+let bitcore = require('bitcore-lib')
+let config = require('../config')
+let blockchain = require('../models/blockchain')
+let storage = require('../models/storage')
+let signer = require('../models/signer')
 
 router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callback_url', function (req, res) {
-  var exchangeRate, btcToAsk
+  let exchangeRate, btcToAsk, satoshiToAsk
 
-  switch (req.params.currency) {
-    case 'USD': exchangeRate = btcUsd
-      break
-    case 'EUR': exchangeRate = btcEur
-      break
-    case 'BTC': exchangeRate = 1
-      break
-    default:
-      return res.send('bad currency')
-  }
-
-  btcToAsk = Math.floor((req.params.expect / exchangeRate) * 100000000) / 100000000
-
-  var data = {
-    'timestamp': Math.floor(Date.now() / 1000),
-    'expect': req.params.expect,
-    'currency': req.params.currency,
-    'exchange_rate': exchangeRate,
-    'btc_to_ask': btcToAsk,
-    'message': req.params.message,
-    'seller': req.params.seller,
-    'customer': req.params.customer,
-    'callback_url': decodeURIComponent(req.params.callback_url)
-  }
-
-  storage.saveAddress(data, function (responseBody) {
-    if (responseBody.ok === true) {
-      console.log(req.id, 'saveAddress()', JSON.stringify(data))
-
-      var paymentInfo = {
-        address: data.address,
-        message: req.params.message,
-        label: req.params.message,
-        amount: Math.floor(btcToAsk * 100000000) // satoshis
-      }
-
-      var answer = {
-        'link': new bitcore.URI(paymentInfo).toString(),
-        'qr': config.base_url_qr + '/generate_qr/' + encodeURIComponent(new bitcore.URI(paymentInfo).toString()),
-        'qr_simple': config.base_url_qr + '/generate_qr/' + data.address,
-        'address': data.address
-      }
-
-      if (typeof sellers[req.params.seller] === 'undefined') { // seller is not in local cache
-        storage.getSeller(req.params.seller, function (responseBody) { // checking if seller's data in database
-          console.log(req.id, 'checking seller existance...')
-          if (typeof responseBody.error !== 'undefined') { // seller doesnt exist
-            storage.saveSeller(req.params.seller, function (responseBody) { // creating seller
-              console.log(req.id, 'seller doesnt exist. creating...')
-              if (responseBody.ok === true) { // seller create success
-                console.log(req.id, 'seller create success')
-                sellers[req.params.seller] = 1
-                res.send(JSON.stringify(answer))
-              } else { // seller create fail
-                console.log(req.id, 'seller create fail')
-                res.send(JSON.stringify({'error': 'Could not save seller'}))
-              }
-            })
-          } else { // seller exists, so we just mark local cache that this one exists
-            console.log(req.id, 'seller already exists')
-            sellers[req.params.seller] = 1
-            res.send(JSON.stringify(answer))
-          }
-        })
-      } else { // seller is in local cache, no need to create it
-        res.send(JSON.stringify(answer))
-      }
-    } else { // saveAddress() failed
-      res.send(responseBody.error + ': ' + responseBody.reason)
-    }
-  })
-})
-
-router.get('/check_payment/:address', function (req, res) {
-  blockchain.getAddress(req.params.address, function (resp) {
-    storage.getAddress(req.params.address, function (json) {
-      if (json !== false && json.btc_to_ask) {
-        var answer = {
-          'btc_expected': json.btc_to_ask,
-          'btc_actual': resp.btc_actual,
-          'btc_unconfirmed': resp.btc_unconfirmed
-        }
-        res.send(JSON.stringify(answer))
-      } else {
-        console.log(req.id, 'storage error', JSON.stringify(json))
-        res.send(JSON.stringify(json))
-      }
-    })
-  })
-})
-
-router.get('/payout/:seller/:amount/:currency/:address', function (req, res) {
-  var exchangeRate
   switch (req.params.currency) {
     case 'USD': exchangeRate = btcUsd
       break
@@ -132,53 +39,155 @@ router.get('/payout/:seller/:amount/:currency/:address', function (req, res) {
       return res.send(JSON.stringify({'error': 'bad currency'}))
   }
 
-  var btcToPay = Math.floor((req.params.amount / exchangeRate) * 100000000) / 100000000
+  satoshiToAsk = Math.floor((req.params.expect / exchangeRate) * 100000000)
+  btcToAsk = satoshiToAsk / 100000000
 
-  storage.getSeller(req.params.seller, function (seller) { // checking if such seller exists
-    if (seller === false || typeof seller.error !== 'undefined') {
-      return res.send(JSON.stringify({'error': 'no such seller'}))
+  let privateKey = new bitcore.PrivateKey()
+  let address = new bitcore.Address(privateKey.toPublicKey())
+
+  let addressData = {
+    'timestamp': Date.now(),
+    'expect': req.params.expect,
+    'currency': req.params.currency,
+    'exchange_rate': exchangeRate,
+    'btc_to_ask': btcToAsk,
+    'message': req.params.message,
+    'seller': req.params.seller,
+    'customer': req.params.customer,
+    'callback_url': decodeURIComponent(req.params.callback_url),
+    'WIF': privateKey.toWIF(),
+    'address': address.toString(),
+    'private_key': privateKey.toString(),
+    'public_key': privateKey.toPublicKey().toString(),
+    'doctype': 'address',
+    '_id': address.toString()
+  }
+
+  let paymentInfo = {
+    address: addressData.address,
+    message: req.params.message,
+    label: req.params.message,
+    amount: satoshiToAsk
+  }
+
+  let answer = {
+    'link': new bitcore.URI(paymentInfo).toString(),
+    'qr': config.base_url_qr + '/generate_qr/' + encodeURIComponent(new bitcore.URI(paymentInfo).toString()),
+    'qr_simple': config.base_url_qr + '/generate_qr/' + addressData.address,
+    'address': addressData.address
+  };
+
+  (async function () {
+    console.log(req.id, 'checking seller existance...')
+    let responseBody = await storage.getSellerPromise(req.params.seller)
+
+    if (typeof responseBody.error !== 'undefined') { // seller doesnt exist
+      console.log(req.id, 'seller doesnt exist. creating...')
+      let privateKey = new bitcore.PrivateKey()
+      let address = new bitcore.Address(privateKey.toPublicKey())
+      let sellerData = {
+        'WIF': privateKey.toWIF(),
+        'address': address.toString(),
+        'private_key': privateKey.toString(),
+        'public_key': privateKey.toPublicKey().toString(),
+        'timestamp': Date.now(),
+        'seller': req.params.seller,
+        '_id': req.params.seller,
+        'doctype': 'seller'
+      }
+      await storage.saveSellerPromise(req.params.seller, sellerData)
+      await blockchain.importaddress(sellerData.address)
+    } else { // seller exists
+      console.log(req.id, 'seller already exists')
     }
 
-    blockchain.createTransaction(req.params.address, btcToPay - 0.0001 /* fee */, 0.0001, seller.WIF, function (txhex) {
-      blockchain.broadcastTransaction(txhex, function (response) {
-        if (typeof response.error !== 'undefined') { // error
-          console.log(req.id, 'payout error:', response)
-          return res.send(response)
-        } else { // no error
-          console.log(req.id, 'sent ' + btcToPay + ' from ' + req.params.seller + ' (' + seller.address + ')' + ' to ' + req.params.address)
-          console.log(req.id, JSON.stringify(response))
-          var data = {
-            'seller': req.params.seller,
-            'btc': btcToPay,
-            'transaction_result': response,
-            'to_address': req.params.address
-          }
-          return storage.savePayout(data, function () { res.send(response) })
-        }
-      })
-    })
+    console.log(req.id, 'saveAddress()', JSON.stringify(addressData))
+    await storage.saveAddressPromise(addressData)
+    await blockchain.importaddress(addressData.address)
+
+    res.send(JSON.stringify(answer))
+  })().catch((error) => {
+    console.log(req.id, JSON.stringify(error))
+    res.send(JSON.stringify({error: error}))
   })
 })
 
+router.get('/check_payment/:address', function (req, res) {
+  let promises = [
+    blockchain.getreceivedbyaddress(req.params.address),
+    storage.getAddressPromise(req.params.address)
+  ]
+
+  Promise.all(promises).then((values) => {
+    let received = values[0]
+    let addressJson = values[1]
+
+    if (addressJson && addressJson.btc_to_ask && addressJson.doctype === 'address') {
+      let answer = {
+        'btc_expected': addressJson.btc_to_ask,
+        'btc_actual': received[1].result,
+        'btc_unconfirmed': received[0].result
+      }
+      res.send(JSON.stringify(answer))
+    } else {
+      console.log(req.id, 'storage error', JSON.stringify(addressJson))
+      res.send(JSON.stringify({'error': 'storage error'}))
+    }
+  })
+})
+
+router.get('/payout/:seller/:amount/:currency/:address', async function (req, res) {
+  if (req.params.currency !== 'BTC') {
+    return res.send(JSON.stringify({'error': 'bad currency'}))
+  }
+
+  let btcToPay = req.params.amount
+  let seller = await storage.getSellerPromise(req.params.seller)
+  if (seller === false || typeof seller.error !== 'undefined') {
+    return res.send(JSON.stringify({'error': 'no such seller'}))
+  }
+  let received = await blockchain.getreceivedbyaddress(seller.address)
+
+  if (+received[1].result === +received[0].result && received[0].result >= btcToPay) { // balance is ok
+    let unspentOutputs = await blockchain.listunspent(seller.address)
+    let tx = signer.createTransaction(unspentOutputs.result, req.params.address, btcToPay, 0.0002, seller.WIF)
+    let broadcastResult = await blockchain.broadcastTransaction(tx)
+    console.log(req.id, 'sent', btcToPay, 'from', req.params.seller, '(', seller.address, ')', 'to', req.params.address)
+    console.log(req.id, 'broadcast result:', JSON.stringify(broadcastResult))
+    let data = {
+      'seller': req.params.seller,
+      'btc': btcToPay,
+      'tx': tx,
+      'transaction_result': broadcastResult,
+      'to_address': req.params.address,
+      'processed': 'payout_done',
+      'timestamp': Date.now(),
+      'doctype': 'payout'
+    }
+    await storage.savePayoutPromise(data)
+    res.send(JSON.stringify(broadcastResult))
+  } else {
+    return res.send(JSON.stringify({'error': 'not enough balance'}))
+  }
+})
+
 router.get('/get_seller_balance/:seller', function (req, res) {
-  storage.getSeller(req.params.seller, function (seller) { // checking if such seller exists
+  (async function () {
+    let seller = await storage.getSellerPromise(req.params.seller)
     if (seller === false || typeof seller.error !== 'undefined') {
       console.log(req.id, 'no such seller')
       return res.send(JSON.stringify({'error': 'no such seller'}))
     }
-    blockchain.getAddress(seller.address, function (resp) {
-      var answer = {
-        'btc_actual': resp.btc_actual,
-        'btc_unconfirmed': resp.btc_unconfirmed
-      }
-      res.send(JSON.stringify(answer))
-    })
-  })
-})
 
-router.get('/get_address_confirmed_balance/:address', function (req, res) {
-  blockchain.getAddress(req.params.address, function (resp) {
-    return res.send(resp.btc_actual + '')
+    let responses = await blockchain.getreceivedbyaddress(seller.address)
+    let answer = {
+      'btc_actual': responses[1].result,
+      'btc_unconfirmed': responses[0].result
+    }
+    res.send(JSON.stringify(answer))
+  })().catch((error) => {
+    console.log(req.id, JSON.stringify(error))
+    res.send(JSON.stringify({'error': error}))
   })
 })
 

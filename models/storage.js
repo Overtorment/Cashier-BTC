@@ -3,117 +3,90 @@
  * -----------
  * Self-hosted bitcoin payment gateway
  *
- * License: WTFPL
- * Author: Igor Korsakov
- * */
+ * https://github.com/Overtorment/Cashier-BTC
+ *
+ **/
 
-var request = require('request')
-var bitcore = require('bitcore-lib')
-var config = require('../config')
+let request = require('request')
+let config = require('../config')
+let rp = require('request-promise')
 
-exports.getDocument = function (docid, callback) {
-  return exports.getAddress(docid, callback) // since atm it does exactly the same
+exports.getDocumentPromise = function (docid) {
+  return exports.getAddressPromise(docid) // since atm it does exactly the same
 }
 
-exports.saveDocument = function (body, callback) {
-  request.post(config.couchdb, { json: body }, function (error, response, body) {
-    if (error) {
-      return callback(false, body)
-    }
-    return callback(response.body)
-  })
-}
-
-exports.getAddress = function (address, callback) {
-  request.get(config.couchdb + '/' + address, function (error, response, body) {
-    if (error) {
-      return callback(false, error)
-    }
-
-    callback(JSON.parse(body))
-  })
-}
-
-exports.getSeller = function (sellerId, callback) {
-  request.get(config.couchdb + '/' + sellerId, function (error, response, body) {
-    if (error) {
-      return callback(false, error)
-    }
-
-    return callback(JSON.parse(body))
-  })
-}
-
-exports.saveAddress = function (body, callback) {
-  var privateKey = new bitcore.PrivateKey()
-  var address = new bitcore.Address(privateKey.toPublicKey())
-  body.WIF = privateKey.toWIF()
-  body.address = address.toString()
-  body.private_key = privateKey.toString()
-  body.public_key = privateKey.toPublicKey().toString()
-  body.timestamp = Math.floor(Date.now() / 1000)
-  body.doctype = 'address'
-  body._id = body.address
-  request.post(config.couchdb, { json: body }, function (error, response, body) {
-    if (error) {
-      return callback(false, body)
-    }
-    return callback(response.body)
-  })
-}
-
-exports.savePayout = function (body, callback) {
-  body.processed = 'payout_done'
-  body.timestamp = Math.floor(Date.now() / 1000)
-  body.doctype = 'payout'
-  request.post(config.couchdb, { json: body }, function (error, response, body) {
-    if (callback) {
+exports.saveDocumentPromise = function (body) {
+  return new Promise(function (resolve, reject) {
+    request.post(config.couchdb, { json: body }, function (error, response, body) {
       if (error) {
-        return callback(false, body)
-      } else {
-        return callback(response.body)
+        return reject(body)
       }
-    } else {
-      return false
-    }
+      return resolve(response.body)
+    })
   })
 }
 
-exports.saveSeller = function (sellerId, callback) {
-  var privateKey = new bitcore.PrivateKey()
-  var address = new bitcore.Address(privateKey.toPublicKey())
-  var data = {
-    'WIF': privateKey.toWIF(),
-    'address': address.toString(),
-    'private_key': privateKey.toString(),
-    'public_key': privateKey.toPublicKey().toString(),
-    'timestamp': Math.floor(Date.now() / 1000),
-    'seller': sellerId,
-    '_id': sellerId,
-    'doctype': 'seller'
-  }
+exports.getAddressPromise = function (address) {
+  return new Promise(function (resolve, reject) {
+    request.get(config.couchdb + '/' + address, function (error, response, body) {
+      if (error) {
+        return reject(error)
+      }
 
-  request.post(config.couchdb, { json: data }, function (error, response, body) {
-    if (error) {
-      return callback(false, body)
-    }
-    return callback(response.body)
+      resolve(JSON.parse(body))
+    })
+  })
+}
+
+exports.getSellerPromise = function (sellerId) {
+  return new Promise(function (resolve, reject) {
+    request.get(config.couchdb + '/' + sellerId, function (error, response, body) {
+      if (error) {
+        return reject(error)
+      }
+
+      return resolve(JSON.parse(body))
+    })
+  })
+}
+
+exports.saveAddressPromise = function (body) {
+  return new Promise(function (resolve, reject) {
+    request.post(config.couchdb, { json: body }, function (error, response, body) {
+      if (error) {
+        return reject(body)
+      }
+      return resolve(response.body)
+    })
+  })
+}
+
+exports.savePayoutPromise = function (body) {
+  return new Promise(function (resolve, reject) {
+    request.post(config.couchdb, { json: body }, function (error, response, body) {
+      if (error) {
+        return reject(body)
+      } else {
+        return resolve(response.body)
+      }
+    })
+  })
+}
+
+exports.saveSellerPromise = function (sellerId, data) {
+  return new Promise(function (resolve, reject) {
+    request.post(config.couchdb, { json: data }, function (error, response, body) {
+      if (error) {
+        return reject(body)
+      }
+      response.body.address = data.address
+      return resolve(response.body)
+    })
   })
 }
 
 exports.getUnprocessedAdressesYoungerThan = function (timestamp, callback) {
-  // запрашиваем view кауча, по которому получаем необработанные задания
-  request.get(config.couchdb + '/_design/address/_view/unprocessed_by_timestamp?startkey=' + timestamp + '&inclusive_end=true&limit=1&reduce=false&include_docs=true', function (error, response, body) {
-    if (error) {
-      return callback(false, error)
-    }
-    return callback(body)
-  })
-}
-
-exports.getUnpaidAdressesYoungerThan = function (timestamp, callback) {
-  // запрашиваем view кауча, по которому получаем необработанные задания
-  request.get(config.couchdb + '/_design/address/_view/unpaid_by_timestamp?startkey=' + timestamp + '&inclusive_end=true&limit=1&reduce=false&include_docs=true', function (error, response, body) {
+  request.get(config.couchdb + '/_design/address/_view/unprocessed_by_timestamp?startkey=' + timestamp + '&inclusive_end=true&limit=10000&reduce=false&include_docs=true', function (error, response, body) {
     if (error) {
       return callback(false, error)
     }
@@ -122,7 +95,6 @@ exports.getUnpaidAdressesYoungerThan = function (timestamp, callback) {
 }
 
 exports.getPaidAdressesYoungerThan = function (timestamp, callback) {
-  // запрашиваем view кауча, по которому получаем необработанные задания
   request.get(config.couchdb + '/_design/address/_view/paid_by_timestamp?startkey=' + timestamp + '&inclusive_end=true&limit=1&reduce=false&include_docs=true', function (error, response, body) {
     if (error) {
       return callback(false, error)
@@ -131,19 +103,7 @@ exports.getPaidAdressesYoungerThan = function (timestamp, callback) {
   })
 }
 
-exports.takeJob = function (json, callback) {
-  // помечаем и сохраняем обратно в БД
-  json.processed = 'processing'
-  request.put(config.couchdb + '/' + json._id,
-    { 'json': json },
-        callback
-  )
-}
-
-exports.saveJobResults = function (json, callback) {
-  request.put(config.couchdb + '/' + json._id,
-    { 'json': json },
-      callback
-  )
+exports.saveJobResultsPromise = function (json) {
+  return rp.put(config.couchdb + '/' + json._id, { 'json': json })
 }
 

@@ -3,19 +3,19 @@
  * -----------
  * Self-hosted bitcoin payment gateway
  *
- * License: WTFPL
- * Author: Igor Korsakov
- * */
+ * https://github.com/Overtorment/Cashier-BTC
+ *
+ **/
 
-var express = require('express')
-var router = express.Router()
-var qr = require('qr-image')
-var crypto = require('crypto')
-var fs = require('fs')
+let express = require('express')
+let router = express.Router()
+let qr = require('qr-image')
+let crypto = require('crypto')
+let fs = require('fs')
 
 router.get('/generate_qr/:text', function (req, res) {
-  var filename
-  var qrSvg
+  let filename
+  let qrSvg
   filename = 'qr/' + crypto.createHash('sha1').update(decodeURIComponent(req.params.text)).digest('hex') + '.png'
   qrSvg = qr.image(decodeURIComponent(req.params.text), { type: 'png' })
   qrSvg.pipe(fs.createWriteStream(filename))

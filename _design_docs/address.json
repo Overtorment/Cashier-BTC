@@ -8,17 +8,11 @@
         "unprocessed_by_timestamp": {
             "map": "function(doc) {\n  if (doc.doctype=='address' && doc.timestamp && (!doc.processed || doc.processed=='unprocessed')) {\n               emit(doc.timestamp, null);\n  }\n}"
         },
-        "unpaid_by_timestamp": {
-            "map": "function(doc) {\n  if (doc.doctype=='address' && doc.timestamp && (doc.processed=='unpaid')) {\n               emit(doc.timestamp, null);\n  }\n}"
-        },
         "paid_by_timestamp": {
-            "map": "function(doc) {\n  if (doc.doctype=='address' && doc.timestamp && (doc.processed=='paid')) {\n               emit(doc.timestamp,  new Date( doc.timestamp * 1000).toISOString().replace('T', ' ') );\n  }\n}"
+            "map": "function(doc) {\n  if (doc.doctype=='address' && doc.timestamp && (doc.processed=='paid')) {\n               emit(doc.timestamp,  new Date( doc.timestamp ).toISOString().replace('T', ' ') );\n  }\n}"
         },
         "paid_and_sweeped_by_timestamp": {
-            "map": "function(doc) {\n  if (doc.doctype=='address' && doc.timestamp && (doc.processed=='paid_and_sweeped')) {\n               emit(doc.timestamp, new Date( doc.timestamp * 1000).toISOString().replace('T', ' '));\n  }\n}"
-        },
-        "processing_by_timestamp": {
-            "map": "function(doc) {\n  if (doc.doctype=='address' && doc.timestamp && (doc.processed=='processing')) {\n               emit(doc.timestamp, null);\n  }\n}"
+            "map": "function(doc) {\n  if (doc.doctype=='address' && doc.timestamp && (doc.processed=='paid_and_sweeped')) {\n               emit(doc.timestamp, new Date( doc.timestamp ).toISOString().replace('T', ' '));\n  }\n}"
         },
         "total_by_seller": {
             "map": "function(doc) {\n  if (doc.doctype=='address' && doc.processed=='paid_and_sweeped' && !doc.is_test) {\n               emit(doc.seller, doc.btc_to_ask-0.0001);\n  }\n}",

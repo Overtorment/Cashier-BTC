@@ -1,33 +1,32 @@
 /* global describe, it */
 
-var assert = require('assert')
+let assert = require('assert')
 
 describe('integration - storage', function () {
   this.timeout(60000)
 
-  describe('getDocument()', function () {
-    it('should return any db document', function (done) {
-      var storage = require('./../../models/storage')
-      storage.getDocument('_design/address', function (data) {
-        if (!data) throw new Error()
-        assert.equal(data._id, '_design/address')
-        assert.equal(data.language, 'javascript')
-        assert.ok(data.views.all_by_customer_and_timestamp, 'all_by_customer_and_timestamp')
-        assert.ok(data.views.unprocessed_by_timestamp, 'unprocessed_by_timestamp')
-        assert.ok(data.views.unpaid_by_timestamp, 'unpaid_by_timestamp')
-        assert.ok(data.views.paid_by_timestamp, 'paid_by_timestamp')
-        assert.ok(data.views.paid_and_sweeped_by_timestamp, 'paid_and_sweeped_by_timestamp')
-        assert.ok(data.views.processing_by_timestamp, 'processing_by_timestamp')
-        assert.ok(data.views.total_by_seller, 'total_by_seller')
-        done()
-      })
+  describe('getDocumentPromise()', function () {
+    it('should return any db document', async function () {
+      let storage = require('./../../models/storage')
+      let data = await storage.getDocumentPromise('_design/address')
+      assert.ok(data)
+      assert.equal(data._id, '_design/address')
+      assert.equal(data.language, 'javascript')
+      assert.ok(data.views.all_by_customer_and_timestamp, 'all_by_customer_and_timestamp')
+      assert.ok(data.views.unprocessed_by_timestamp, 'unprocessed_by_timestamp')
+      assert.ok(data.views.paid_by_timestamp, 'paid_by_timestamp')
+      assert.ok(data.views.paid_and_sweeped_by_timestamp, 'paid_and_sweeped_by_timestamp')
+      assert.ok(data.views.total_by_seller, 'total_by_seller')
     })
   })
 
-  describe('saveAddress() && getAddress()', function () {
+  describe('saveAddressPromise() && getAddressPromise()', function () {
     it('should save document with address data, and get it back', function (done) {
-      var storage = require('./../../models/storage')
-      var data = {
+      let storage = require('./../../models/storage')
+      let bitcore = require('bitcore-lib')
+      let privateKey = new bitcore.PrivateKey()
+      let address = (new bitcore.Address(privateKey.toPublicKey())).toString()
+      let data = {
         'expect': 1,
         'currency': 'BTC',
         'exchange_rate': 1,
@@ -35,15 +34,21 @@ describe('integration - storage', function () {
         'message': 'message',
         'seller': 'testseller',
         'customer': 'testuser',
-        'callback_url': 'http://fu.bar'
+        'callback_url': 'http://fu.bar',
+        'WIF': 'wif',
+        'address': address,
+        'private_key': 'private',
+        'public_key': 'public',
+        'doctype': 'address',
+        '_id': address
       }
 
-      storage.saveAddress(data, function (response) {
+      storage.saveAddressPromise(data).then(function (response) {
         assert.ok(response.ok)
         assert.ok(response.id)
 
                 // now fetching this document back
-        storage.getAddress(response.id, function (data2) {
+        storage.getAddressPromise(response.id).then(function (data2) {
           if (!data2) throw new Error()
           assert.equal(data2._id, response.id)
           assert.ok(data2.private_key)
@@ -57,39 +62,33 @@ describe('integration - storage', function () {
           assert.equal(data2.expect, data.expect)
           assert.equal(data2.doctype, 'address')
           done()
-        })
-      })
+        }).catch((err) => console.log(err))
+      }).catch((err) => console.log(err))
     })
   })
 
-  describe('savePayout()', function () {
-    it('saves document with details on the payout', function (done) {
-      var storage = require('./../../models/storage')
-      var data = {}
-
-      storage.savePayout(data, function (response) {
-        assert.ok(response.ok)
-        assert.ok(response.id)
-
-        // now fetching this document back
-        storage.getDocument(response.id, function (data2) {
-          if (!data2) throw new Error()
-          assert.equal(data2.processed, 'payout_done')
-          assert.equal(data2.doctype, 'payout')
-          done()
-        })
-      })
-    })
-  })
-
-  describe('saveSeller()', function () {
+  describe('saveSellerPromise()', function () {
     it('saves document with details on the seller', function (done) {
-      var storage = require('./../../models/storage')
-      var sellerId = require('crypto').createHash('md5').update(Math.random().toString()).digest('hex')
+      let storage = require('./../../models/storage')
+      let sellerId = 'testseller-' + require('crypto').createHash('md5').update(Math.random().toString()).digest('hex')
 
-      storage.saveSeller(sellerId, function (response) {
+      let bitcore = require('bitcore-lib')
+      let privateKey = new bitcore.PrivateKey()
+      let address = new bitcore.Address(privateKey.toPublicKey())
+      let data = {
+        'WIF': privateKey.toWIF(),
+        'address': address.toString(),
+        'private_key': privateKey.toString(),
+        'public_key': privateKey.toPublicKey().toString(),
+        'timestamp': Date.now(),
+        'seller': sellerId,
+        '_id': sellerId,
+        'doctype': 'seller'
+      }
+
+      storage.saveSellerPromise(sellerId, data).then(function (response) {
         // now fetching this document back
-        storage.getDocument(response.id, function (data2) {
+        storage.getDocumentPromise(response.id).then(function (data2) {
           if (!data2) throw new Error()
           assert.ok(data2.WIF)
           assert.ok(data2.address)
@@ -104,10 +103,14 @@ describe('integration - storage', function () {
     })
   })
 
-  describe('saveAddress() && getUnprocessedAdressesYoungerThan()', function () {
+  describe('saveAddressPromise() && getUnprocessedAdressesYoungerThan()', function () {
     it('saves unprocessed address to database and fetches it back', function (done) {
-      var storage = require('./../../models/storage')
-      var data = {
+      let bitcore = require('bitcore-lib')
+      let privateKey = new bitcore.PrivateKey()
+      let address = (new bitcore.Address(privateKey.toPublicKey())).toString()
+      let storage = require('./../../models/storage')
+      let data = {
+        'timestamp': Date.now(),
         'expect': 1,
         'currency': 'BTC',
         'exchange_rate': 1,
@@ -115,15 +118,18 @@ describe('integration - storage', function () {
         'message': 'message',
         'seller': 'testseller',
         'customer': 'testuser',
-        'callback_url': 'http://fu.bar'
+        'callback_url': 'http://fu.bar',
+        'doctype': 'address',
+        'address': address,
+        '_id': address
       }
 
-      storage.saveAddress(data, function (response) {
+      storage.saveAddressPromise(data).then(function (response) {
         assert.ok(response.ok)
         assert.ok(response.id)
 
         // now fetching this document back
-        storage.getAddress(response.id, function (data2) {
+        storage.getAddressPromise(response.id).then(function (data2) {
           if (!data2) throw new Error()
           assert.equal(data2._id, response.id)
           assert.ok(data2.timestamp)
