@@ -4,7 +4,7 @@ Cashier-BTC
 v2 refactored and improved, battle-tested
 -----------------------------------------
 
-[![JavaScript Style Guide](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/) Tests: [![CircleCI](https://circleci.com/gh/Overtorment/Cashier-BTC/tree/v2.svg?style=svg)](https://circleci.com/gh/Overtorment/Cashier-BTC/tree/v2)
+[![JavaScript Style Guide](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/) Tests: [![CircleCI](https://circleci.com/gh/Overtorment/Cashier-BTC/tree/v2.svg?style=svg)](https://circleci.com/gh/Overtorment/Cashier-BTC/tree/master)
 
 Self-hosted Node.js Bitcoin payment gateway. Provides REST API for anyone who wants to accept bitcoin.
 Request payments (invoicing), check payments (whether invoice is paid), receive callbacks if payment is made.
@@ -105,7 +105,7 @@ Callback_url will be requested once the invoice is paid.
 		}
 
 Link can be opened by the payer, there is a chance it will be handled by his bitcoin wallet.
-QR whoud be shown to payer as well. Duplicate it with text, like, dear user, please pay the %expect% amount to %address%.
+QR shoud be shown to payer as well. Duplicate it with text, like, dear user, please pay the %expect% amount to %address%.
 
 ### GET /check_payment/:address
 
