@@ -10,8 +10,8 @@
 let bitcore = require('bitcore-lib')
 
 function createTransaction (utxos, toAddress, amount, fixedFee, WIF) {
-  amount = parseInt(amount * 100000000)
-  fixedFee = parseInt(fixedFee * 100000000)
+  amount = parseInt((amount * 100000000).toFixed(0))
+  fixedFee = parseInt((fixedFee * 100000000).toFixed(0))
 
   let pk = new bitcore.PrivateKey.fromWIF(WIF) // eslint-disable-line new-cap
   let fromAddress = (pk.toPublicKey()).toAddress(bitcore.Networks.livenet)
@@ -24,7 +24,8 @@ function createTransaction (utxos, toAddress, amount, fixedFee, WIF) {
       'txid': utxo.txid,
       'vout': utxo.vout,
       'scriptPubKey': utxo.scriptPubKey,
-      'satoshis': utxo.amount * 100000000
+      'satoshis': parseInt((utxo.amount * 100000000).toFixed(0))
+
     })
   }
 
