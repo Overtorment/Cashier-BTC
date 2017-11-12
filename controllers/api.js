@@ -141,33 +141,40 @@ router.get('/payout/:seller/:amount/:currency/:address', async function (req, re
     return res.send(JSON.stringify({'error': 'bad currency'}))
   }
 
-  let btcToPay = req.params.amount
-  let seller = await storage.getSellerPromise(req.params.seller)
-  if (seller === false || typeof seller.error !== 'undefined') {
-    return res.send(JSON.stringify({'error': 'no such seller'}))
-  }
-  let received = await blockchain.getreceivedbyaddress(seller.address)
-
-  if (+received[1].result === +received[0].result && received[0].result >= btcToPay) { // balance is ok
-    let unspentOutputs = await blockchain.listunspent(seller.address)
-    let tx = signer.createTransaction(unspentOutputs.result, req.params.address, btcToPay, 0.0002, seller.WIF)
-    let broadcastResult = await blockchain.broadcastTransaction(tx)
-    console.log(req.id, 'sent', btcToPay, 'from', req.params.seller, '(', seller.address, ')', 'to', req.params.address)
-    console.log(req.id, 'broadcast result:', JSON.stringify(broadcastResult))
-    let data = {
-      'seller': req.params.seller,
-      'btc': btcToPay,
-      'tx': tx,
-      'transaction_result': broadcastResult,
-      'to_address': req.params.address,
-      'processed': 'payout_done',
-      'timestamp': Date.now(),
-      'doctype': 'payout'
+  try {
+    let btcToPay = req.params.amount
+    let seller = await storage.getSellerPromise(req.params.seller)
+    if (seller === false || typeof seller.error !== 'undefined') {
+      return res.send(JSON.stringify({'error': 'no such seller'}))
     }
-    await storage.savePayoutPromise(data)
-    res.send(JSON.stringify(broadcastResult))
-  } else {
-    return res.send(JSON.stringify({'error': 'not enough balance'}))
+    let received = await blockchain.getreceivedbyaddress(seller.address)
+
+    if (+received[1].result === +received[0].result && received[0].result >= btcToPay) { // balance is ok
+      let unspentOutputs = await blockchain.listunspent(seller.address)
+      console.log(req.id, 'sending', btcToPay, 'from', req.params.seller, '(', seller.address, ')', 'to', req.params.address)
+      let tx = signer.createTransaction(unspentOutputs.result, req.params.address, btcToPay, 0.0002, seller.WIF)
+      console.log(req.id, 'broadcasting', tx)
+      let broadcastResult = await blockchain.broadcastTransaction(tx)
+      console.log(req.id, 'broadcast result:', JSON.stringify(broadcastResult))
+      let data = {
+        'seller': req.params.seller,
+        'btc': btcToPay,
+        'tx': tx,
+        'transaction_result': broadcastResult,
+        'to_address': req.params.address,
+        'processed': 'payout_done',
+        'timestamp': Date.now(),
+        'doctype': 'payout'
+      }
+      await storage.savePayoutPromise(data)
+      res.send(JSON.stringify(broadcastResult))
+    } else {
+      console.log(req.id, 'not enough balance')
+      return res.send(JSON.stringify({'error': 'not enough balance'}))
+    }
+  } catch (error) {
+    console.log(req.id, error)
+    return res.send(JSON.stringify({'error': error}))
   }
 })
 
