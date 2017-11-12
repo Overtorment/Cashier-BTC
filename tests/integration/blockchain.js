@@ -2,17 +2,14 @@
 
 let assert = require('assert')
 
-describe('integration - storage', function () {
-  this.timeout(60000)
+describe('integration - blockchain', function () {
+  this.timeout(6000)
 
-  describe('getblockchaininfo RPC call', function () {
-    it('should return info', function (done) {
+  describe('getblockchaininfo() RPC call', function () {
+    it('should return info', async function () {
       let blockchain = require('./../../models/blockchain')
-      blockchain.getblockchaininfo().then((info) => {
-        assert.ok(info.result.chain === 'main')
-        assert.ok(info.result.blocks > 0)
-        done()
-      })
+      let info = await blockchain.getblockchaininfo()
+      assert.equal(info.result.chain, 'main')
     })
   })
 })
