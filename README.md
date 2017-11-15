@@ -76,6 +76,7 @@ TODO
 * [ ] Stats
 * [ ] Better tests
 * [x] ~~CI~~
+* [ ] Ditch bitcore-lib in favor of bitcoinjs-lib
 * [ ] SegWit
 
 
