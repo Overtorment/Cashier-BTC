@@ -157,8 +157,5 @@ Check the total balance of seller's aggregated address.
 
 	Response
 
-		{
-			"btc_actual": 0,
-			"btc_unconfirmed": 0
-		}
+		Json encoded available balance
 
