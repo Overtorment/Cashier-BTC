@@ -186,10 +186,10 @@ router.get('/get_seller_balance/:seller', function (req, res) {
       return res.send(JSON.stringify({'error': 'no such seller'}))
     }
 
-    let responses = await blockchain.getreceivedbyaddress(seller.address)
-    let answer = {
-      'btc_actual': responses[1].result,
-      'btc_unconfirmed': responses[0].result
+    let responses = await blockchain.listunspent(seller.address)
+    let answer = 0
+    for (const utxo of responses.result) {
+      answer += utxo.amount
     }
     res.send(JSON.stringify(answer))
   })().catch((error) => {
