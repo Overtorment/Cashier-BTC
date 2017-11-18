@@ -208,9 +208,7 @@ describe('acceptance - loading express', function () {
             .expect(function (res) {
               let json = JSON.parse(res.text)
               should.exist(json)
-              json.should.be.an('object')
-              should.exist(json.btc_actual)
-              should.exist(json.btc_unconfirmed)
+              json.should.equal(0)
             })
             .expect(200, done)
   })
