@@ -1,6 +1,6 @@
 {
   "name": "Cashier-BTC",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Self-hosted bitcoin payment gateway",
   "main": "cashier-btc.js",
   "repository": "https://github.com/Overtorment/Cashier-BTC",
