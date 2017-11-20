@@ -15,7 +15,7 @@
             "map": "function(doc) {\n  if (doc.doctype=='address' && doc.timestamp && (doc.processed=='paid_and_sweeped')) {\n               emit(doc.timestamp, new Date( doc.timestamp ).toISOString().replace('T', ' '));\n  }\n}"
         },
         "total_by_seller": {
-            "map": "function(doc) {\n  if (doc.doctype=='address' && doc.processed=='paid_and_sweeped' && !doc.is_test) {\n               emit(doc.seller, doc.btc_to_ask-0.0001);\n  }\n}",
+            "map": "function(doc) {\n  if (doc.doctype=='address' && doc.processed=='paid_and_sweeped' && !doc.is_test) {\n               emit(doc.seller, doc.btc_to_ask);\n  }\n}",
             "reduce": "function(key, values, rereduce) {\n  return sum(values);   \n}"
         }
     },
