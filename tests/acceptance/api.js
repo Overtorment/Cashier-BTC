@@ -10,7 +10,6 @@ let reRequire = function (module) {
 let request = reRequire('supertest')
 let should = reRequire('chai').should() // actually call the function
 let expect = reRequire('chai').expect
-let path = require('path')
 
 describe('acceptance - loading express', function () {
   this.timeout(60000)
@@ -24,13 +23,6 @@ describe('acceptance - loading express', function () {
 
   afterEach(function (done) {
     server.close(done)
-  })
-
-  it('responds to /', function (done) {
-    request(server)
-            .get('/')
-            .expect('Cashier-BTC reporting for duty')
-            .expect(200, done)
   })
 
   it('responds to /request_payment/:expect/:currency/:message/:seller/:customer/:callback_url', function (done) {
@@ -133,30 +125,13 @@ describe('acceptance - loading express', function () {
       .expect(200, done)
   })
 
-  it('responds to /generate_qr/ and qr image is actually generated', function (done) {
-    reRequire('fs').accessSync(path.join(__dirname, '/../../qr'), reRequire('fs').W_OK, function (err) {
-      should.not.exist(err)
-    })
-
-    let filename = +new Date()
-    request(server)
-      .get('/generate_qr/' + filename)
-      .expect(function (res) {
-        should.exist(res.headers.location)
-        reRequire('fs').accessSync(path.join(__dirname, '/../..'), reRequire('fs').W_OK, function (err) {
-          should.not.exist(err)
-        })
-      })
-      .expect(301, done)
-  })
-
   it('returns unprocessed documents ok', function (done) {
     let seller = 'testseller-' + Math.random().toString(36).replace(/[^a-z]+/g, '').substr(0, 5)
     request(server)
       .get('/request_payment/0.001/BTC/testmessage/' + seller + '/testcustomer/http%3A%2F%2Ftesturl.com%2F')
       .expect(200, function () {
         let storage = require('../../models/storage')
-        storage.getUnprocessedAdressesYoungerThan(3 * 1000 /* 3 sec */, function (json) {
+        storage.getUnprocessedAdressesYoungerThan(Date.now() - 3 * 1000 /* 3 sec */, function (json) {
           let rows = JSON.parse(json)
           rows = rows || {}
           rows.rows = rows.rows || []
@@ -223,11 +198,5 @@ describe('acceptance - loading express', function () {
               should.exist(json.error)
             })
             .expect(200, done)
-  })
-
-  it('404 everything else', function (done) {
-    request(server)
-            .get('/foo/bar')
-            .expect(404, done)
   })
 })
