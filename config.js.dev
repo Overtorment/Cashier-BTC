@@ -1,13 +1,12 @@
 module.exports = {
-	"port" : 2222,
-	"base_url" : "http://localhost:2222",
-	"base_url_qr" : "http://localhost:2222",
-	"couchdb" : "http://user:pass@localhost:5984/cashier-btc",  // install locally or use https://cloudant.com
-	"rely_on" : "bitcoind",
-	"bitcoind": {
-		"rpc": "http://user:pass@127.0.0.1:8332"
-	},
-	"small_amount_threshhold" : 0.005, // amounts higher than that will require confirmed balance
-	"process_unpaid_for_period" :  24*3600*1000, // worker that checks status of addresses
-	"process_paid_for_period" :  30*24*3600*1000 // worker2 that sweeps temporary wallets
+  'port': 2222,
+  'base_url': 'http://localhost:2222',
+  'base_url_qr': 'http://localhost:2222',
+  'couchdb': 'http://user:pass@localhost:5984/cashier-btc',  // install locally or use https://cloudant.com
+  'bitcoind': {
+    'rpc': 'http://user:pass@127.0.0.1:8332'
+  },
+  'small_amount_threshhold': 0.005, // amounts higher than that will require confirmed balance
+  'process_unpaid_for_period': 24 * 3600 * 1000, // worker that checks status of addresses
+  'process_paid_for_period': 30 * 24 * 3600 * 1000 // worker2 that sweeps temporary wallets
 }

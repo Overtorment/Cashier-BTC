@@ -19,7 +19,6 @@
 
 let express = require('express')
 let router = express.Router()
-let bitcore = require('bitcore-lib')
 let config = require('../config')
 let blockchain = require('../models/blockchain')
 let storage = require('../models/storage')
@@ -42,8 +41,7 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
   satoshiToAsk = Math.floor((req.params.expect / exchangeRate) * 100000000)
   btcToAsk = satoshiToAsk / 100000000
 
-  let privateKey = new bitcore.PrivateKey()
-  let address = new bitcore.Address(privateKey.toPublicKey())
+  let address = signer.generateNewAddress()
 
   let addressData = {
     'timestamp': Date.now(),
@@ -55,12 +53,10 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
     'seller': req.params.seller,
     'customer': req.params.customer,
     'callback_url': decodeURIComponent(req.params.callback_url),
-    'WIF': privateKey.toWIF(),
-    'address': address.toString(),
-    'private_key': privateKey.toString(),
-    'public_key': privateKey.toPublicKey().toString(),
+    'WIF': address.WIF,
+    'address': address.address,
     'doctype': 'address',
-    '_id': address.toString()
+    '_id': address.address
   }
 
   let paymentInfo = {
@@ -71,8 +67,8 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
   }
 
   let answer = {
-    'link': new bitcore.URI(paymentInfo).toString(),
-    'qr': config.base_url_qr + '/generate_qr/' + encodeURIComponent(new bitcore.URI(paymentInfo).toString()),
+    'link': signer.URI(paymentInfo),
+    'qr': config.base_url_qr + '/generate_qr/' + encodeURIComponent(signer.URI(paymentInfo)),
     'qr_simple': config.base_url_qr + '/generate_qr/' + addressData.address,
     'address': addressData.address
   };
@@ -83,25 +79,23 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
 
     if (typeof responseBody.error !== 'undefined') { // seller doesnt exist
       console.log(req.id, 'seller doesnt exist. creating...')
-      let privateKey = new bitcore.PrivateKey()
-      let address = new bitcore.Address(privateKey.toPublicKey())
+      let address = signer.generateNewAddress()
       let sellerData = {
-        'WIF': privateKey.toWIF(),
-        'address': address.toString(),
-        'private_key': privateKey.toString(),
-        'public_key': privateKey.toPublicKey().toString(),
+        'WIF': address.WIF,
+        'address': address.address,
         'timestamp': Date.now(),
         'seller': req.params.seller,
         '_id': req.params.seller,
         'doctype': 'seller'
       }
+      console.log(req.id, 'created', req.params.seller, '(', sellerData.address, ')')
       await storage.saveSellerPromise(req.params.seller, sellerData)
       await blockchain.importaddress(sellerData.address)
     } else { // seller exists
       console.log(req.id, 'seller already exists')
     }
 
-    console.log(req.id, 'saveAddress()', JSON.stringify(addressData))
+    console.log(req.id, 'created address', addressData.address)
     await storage.saveAddressPromise(addressData)
     await blockchain.importaddress(addressData.address)
 
@@ -152,7 +146,12 @@ router.get('/payout/:seller/:amount/:currency/:address', async function (req, re
     if (+received[1].result === +received[0].result && received[0].result >= btcToPay) { // balance is ok
       let unspentOutputs = await blockchain.listunspent(seller.address)
       console.log(req.id, 'sending', btcToPay, 'from', req.params.seller, '(', seller.address, ')', 'to', req.params.address)
-      let tx = signer.createTransaction(unspentOutputs.result, req.params.address, btcToPay, 0.0002, seller.WIF)
+      let createTx = signer.createTransaction
+      if (seller.address[0] === '3') {
+        // assume source address is SegWit P2SH
+        createTx = signer.createSegwitTransaction
+      }
+      let tx = createTx(unspentOutputs.result, req.params.address, btcToPay, 0.0001, seller.WIF)
       console.log(req.id, 'broadcasting', tx)
       let broadcastResult = await blockchain.broadcastTransaction(tx)
       console.log(req.id, 'broadcast result:', JSON.stringify(broadcastResult))

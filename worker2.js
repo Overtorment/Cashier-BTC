@@ -22,8 +22,8 @@ require('./smoke-test')
 
 ;(async () => {
   while (1) {
-    console.log('.')
-    await getJob().then(processJob).then(() => new Promise((resolve) => setTimeout(resolve, 15000))).catch((err) => console.log(err))
+    console.log('worker2.js', '.')
+    await getJob().then(processJob).then(() => new Promise((resolve) => setTimeout(resolve, 15000))).catch((err) => console.log('worker2.js', err))
   }
 })()
 
@@ -43,14 +43,20 @@ async function processJob (rows) {
     let json = row.doc
 
     let received = await blockchain.getreceivedbyaddress(json.address)
-    console.log('address:', json.address, 'expect:', json.btc_to_ask, 'confirmed:', received[1].result, 'unconfirmed:', received[0].result)
+    console.log('worker2.js', 'address:', json.address, 'expect:', json.btc_to_ask, 'confirmed:', received[1].result, 'unconfirmed:', received[0].result)
 
     if (+received[1].result === +received[0].result && received[0].result > 0) { // balance is ok, need to transfer it
       let seller = await storage.getSellerPromise(json.seller)
-      console.log('transferring', received[0].result, 'BTC (minus fee) from', json.address, 'to seller\'s address', seller.address)
+      console.log('worker2.js', 'transferring', received[0].result, 'BTC (minus fee) from', json.address, 'to seller', seller.seller, '(', seller.address, ')')
       let unspentOutputs = await blockchain.listunspent(json.address)
 
-      let tx = signer.createTransaction(unspentOutputs.result, seller.address, received[0].result, 0.0002, json.WIF)
+      let createTx = signer.createTransaction
+      if (json.address[0] === '3') {
+        // assume source address is SegWit P2SH
+        // pretty safe to assume that since we generate those addresses
+        createTx = signer.createSegwitTransaction
+      }
+      let tx = createTx(unspentOutputs.result, seller.address, received[0].result, 0.0001, json.WIF)
       let broadcastResult = await blockchain.broadcastTransaction(tx)
 
       json.processed = 'paid_and_sweeped'
@@ -62,7 +68,7 @@ async function processJob (rows) {
 
       await storage.saveJobResultsPromise(json)
     } else {
-      console.log('balance is not ok, skip')
+      console.log('worker2.js', 'balance is not ok, skip')
     }
   }
 }

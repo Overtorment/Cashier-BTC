@@ -28,7 +28,7 @@ app.set('trust proxy', 'loopback')
 
 let bodyParser = require('body-parser')
 let config = require('./config')
-let https = require('https')
+let rp = require('request-promise')
 
 app.use(bodyParser.urlencoded({ extended: false })) // parse application/x-www-form-urlencoded
 app.use(bodyParser.json(null)) // parse application/json
@@ -40,30 +40,21 @@ app.use('/qr', express.static('qr'))
 app.use(require('./controllers/api'))
 app.use(require('./controllers/website'))
 
-let updateExchangeRate = function (pair) {
-  https.get('https://www.bitstamp.net/api/v2/ticker/' + pair, function (ret) {
-    let json = ''
-    ret.on('data', function (d) { json += d })
-    ret.on('end', function () {
-      json = JSON.parse(json)
-      let rate
-      if (json.ask) {
-        rate = json.ask
-      } else {
-        console.log(json)
-      }
-      switch (pair) {
-        case 'btceur': global.btcEur = rate; break
-        case 'btcusd': global.btcUsd = rate; break
-      }
-    })
-  })
+let updateExchangeRate = async function (pair) {
+  let json
+  try {
+    json = await rp.get({url: 'https://www.bitstamp.net/api/v2/ticker/' + pair, json: true})
+  } catch (err) {
+    return console.log(err.message)
+  }
+  switch (pair) {
+    case 'btceur': global.btcEur = json.ask; break
+    case 'btcusd': global.btcUsd = json.ask; break
+  }
 }
 
-updateExchangeRate('btcusd')
-updateExchangeRate('btceur')
-setInterval(function () { updateExchangeRate('btcusd') }, 5 * 60 * 1000)
-setInterval(function () { updateExchangeRate('btceur') }, 5 * 60 * 1000)
+updateExchangeRate('btcusd').then(updateExchangeRate('btceur'))
+setInterval(() => updateExchangeRate('btcusd').then(updateExchangeRate('btceur')), 5 * 60 * 1000)
 
 require('./smoke-test')
 require('./deploy-design-docs') // checking design docs in Couchdb
