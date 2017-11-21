@@ -1,20 +1,23 @@
 Cashier-BTC
 ===================
 
-v2 refactored and improved, battle-tested
------------------------------------------
+v2 refactored and improved
+---------------------------
 
 [![JavaScript Style Guide](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/) Tests: [![CircleCI](https://circleci.com/gh/Overtorment/Cashier-BTC.svg?style=svg)](https://circleci.com/gh/Overtorment/Cashier-BTC)
 
-Self-hosted Node.js Bitcoin payment gateway. Provides REST API for anyone who wants to accept bitcoin.
+Self-hosted Node.js Bitcoin payment gateway. Provides REST API (microservice).
+Process Bitcoin payments on your end, securely, with no comission.
+
 Request payments (invoicing), check payments (whether invoice is paid), receive callbacks if payment is made.
 Aggregate funds on final (aggregational) address.
 Depends on Nodejs v8+, Bitcoin Core, Couchdb for storage.
 
 * Simple
-* Autonomous (works though self-hosted Bitcoin Core node)
+* No 3rd parties (works though Bitcoin Core node)
 * Transactions are signed locally. No private keys leak
-* Battle-tested in production: 50+ BTC turnover already
+* Battle-tested in production
+* SegWit compatible
 
 
 Installation
@@ -72,12 +75,14 @@ TODO
 * [x] ~~Add options to work through bitcoind and other bitcoin network endpoints~~
 * [x] ~~Add tests~~
 * [x] ~~Better abstractioning (add more abstraction layers)~~
+* [x] ~~CI~~
 * [ ] Better logging & error handling
 * [ ] Stats
 * [ ] Better tests
-* [x] ~~CI~~
-* [ ] Ditch bitcore-lib in favor of bitcoinjs-lib
-* [ ] SegWit
+* [x] ~~Ditch bitcore-lib in favor of bitcoinjs-lib~~
+* [x] ~~SegWit~~
+* [ ] Flexible (user-defined?) fees
+* [ ] BigNumber lib for all numbers handling
 
 
 API
@@ -127,6 +132,11 @@ Check payment by a unique address received in the "request_payment" call.
 		}
 
 Using difference between "btc_expected" and "btc_actual" you can judge whether payment request (invoice) was paid.
+You can use this call to implement some kind of frontend animation which shows 'waiting for funds', and 
+polls periodically about the status of payment (i.e. unconfirmed incoming funds, paid in full/not in full).
+In case you accept unconfirmed balances (see `config.small_amount_threshhold`), you might want to check payment again before shipping actual goods.
+
+
 
 
 ### GET /payout/:seller/:amount/:currency/:address
@@ -160,3 +170,14 @@ Check the total balance of seller's aggregated address.
 
 		Json encoded available balance
 
+
+Hardening for Production
+------------------------
+
+When the `seller` is created in `/request_payment/` call, database record also stores seller's `address` 
+and associated `WIF` which allows to spend seller's aggregated funds.
+You might want to manually replace this record with your own `address` (probably a cold storage), and not putting `WIF` in the record.
+This breaks the `/payout/` call, but at least the funds from orders will be forwarded to a secure storage.
+
+Small risk remains with hot wallets still having their `WIFs` in the database, but this is a reality any other Bitcoin processor
+has to live in.

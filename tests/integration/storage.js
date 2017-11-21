@@ -37,8 +37,6 @@ describe('integration - storage', function () {
         'callback_url': 'http://fu.bar',
         'WIF': 'wif',
         'address': address,
-        'private_key': 'private',
-        'public_key': 'public',
         'doctype': 'address',
         '_id': address
       }
@@ -47,11 +45,10 @@ describe('integration - storage', function () {
         assert.ok(response.ok)
         assert.ok(response.id)
 
-                // now fetching this document back
+        // now fetching this document back
         storage.getAddressPromise(response.id).then(function (data2) {
           if (!data2) throw new Error()
           assert.equal(data2._id, response.id)
-          assert.ok(data2.private_key)
           assert.equal(data2.callback_url, data.callback_url)
           assert.equal(data2.customer, data.customer)
           assert.equal(data2.seller, data.seller)
@@ -78,8 +75,6 @@ describe('integration - storage', function () {
       let data = {
         'WIF': privateKey.toWIF(),
         'address': address.toString(),
-        'private_key': privateKey.toString(),
-        'public_key': privateKey.toPublicKey().toString(),
         'timestamp': Date.now(),
         'seller': sellerId,
         '_id': sellerId,
@@ -92,8 +87,6 @@ describe('integration - storage', function () {
           if (!data2) throw new Error()
           assert.ok(data2.WIF)
           assert.ok(data2.address)
-          assert.ok(data2.public_key)
-          assert.ok(data2.private_key)
           assert.ok(data2.seller)
           assert.equal(data2.seller, sellerId)
           assert.equal(data2.doctype, 'seller')

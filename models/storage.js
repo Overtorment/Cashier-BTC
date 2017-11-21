@@ -79,7 +79,6 @@ exports.saveSellerPromise = function (sellerId, data) {
       if (error) {
         return reject(body)
       }
-      response.body.address = data.address
       return resolve(response.body)
     })
   })

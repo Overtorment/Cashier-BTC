@@ -12,6 +12,7 @@
     "clean": "rm -r -f ./node_modules/ && rm -r -f ./qr/"
   },
   "dependencies": {
+    "bitcoinjs-lib": "^3.3.0",
     "bitcore-lib": "0.15.0",
     "body-parser": "^1.18.2",
     "chai": "^4.1.2",
