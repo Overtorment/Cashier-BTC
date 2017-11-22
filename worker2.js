@@ -23,17 +23,12 @@ require('./smoke-test')
 ;(async () => {
   while (1) {
     console.log('worker2.js', '.')
-    await getJob().then(processJob).then(() => new Promise((resolve) => setTimeout(resolve, 15000))).catch((err) => console.log('worker2.js', err))
+    let wait = ms => new Promise(resolve => setTimeout(resolve, ms))
+    let job = await storage.getPaidAdressesNewerThanPromise(Date.now() - config.process_paid_for_period)
+    await processJob(job)
+    await wait(15000)
   }
 })()
-
-function getJob () {
-  return new Promise(function (resolve) {
-    storage.getPaidAdressesYoungerThan(Date.now() - config.process_paid_for_period, function (json) {
-      return resolve(JSON.parse(json))
-    })
-  })
-}
 
 async function processJob (rows) {
   rows = rows || {}
@@ -57,7 +52,9 @@ async function processJob (rows) {
         createTx = signer.createSegwitTransaction
       }
       let tx = createTx(unspentOutputs.result, seller.address, received[0].result, 0.0001, json.WIF)
+      console.log('worker2.js', 'broadcasting', tx)
       let broadcastResult = await blockchain.broadcastTransaction(tx)
+      console.log('worker2.js', 'broadcast result:', JSON.stringify(broadcastResult))
 
       json.processed = 'paid_and_sweeped'
       json.sweep_result = json.sweep_result || {}

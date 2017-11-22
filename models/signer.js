@@ -48,18 +48,27 @@ exports.createSegwitTransaction = function (utxos, toAddress, amount, fixedFee, 
   let redeemScript = bitcoinjs.script.witnessPubKeyHash.output.encode(pubKeyHash)
 
   let txb = new bitcoinjs.TransactionBuilder()
-
+  let unspentAmount = 0
   for (const unspent of utxos) {
     txb.addInput(unspent.txid, unspent.vout)
-    txb.addOutput(toAddress, parseInt(((amount - fixedFee) * 100000000).toFixed(0)))
-    txb.sign(0, keyPair, redeemScript, null, parseInt(((unspent.amount) * 100000000).toFixed(0)))
+    unspentAmount += parseInt(((unspent.amount) * 100000000).toFixed(0))
+  }
+  let amountToOutput = parseInt(((amount - fixedFee) * 100000000).toFixed(0))
+  txb.addOutput(toAddress, amountToOutput)
+  if (amountToOutput + parseInt((fixedFee * 100000000).toFixed(0)) !== unspentAmount) {
+    // sending less than we have, so the rest should go back
+    txb.addOutput(exports.WIF2segwitAddress(WIF), unspentAmount - amountToOutput)
+  }
+
+  for (let c = 0; c < utxos.length; c++) {
+    txb.sign(c, keyPair, redeemScript, null, parseInt((utxos[c].amount * 100000000).toFixed(0)))
   }
 
   let tx = txb.build()
   return tx.toHex()
 }
 
-exports.generateNewAddress = function () {
+exports.generateNewSegwitAddress = function () {
   let keyPair = bitcoinjs.ECPair.makeRandom()
   let pubKey = keyPair.getPublicKeyBuffer()
 
@@ -88,7 +97,7 @@ exports.URI = function (paymentInfo) {
   return uri
 }
 
-exports.WIF2address = function (WIF) {
+exports.WIF2segwitAddress = function (WIF) {
   let keyPair = bitcoinjs.ECPair.fromWIF(WIF)
   let pubKey = keyPair.getPublicKeyBuffer()
   let witnessScript = bitcoinjs.script.witnessPubKeyHash.output.encode(bitcoinjs.crypto.hash160(pubKey))

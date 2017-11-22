@@ -131,8 +131,8 @@ describe('acceptance - loading express', function () {
       .get('/request_payment/0.001/BTC/testmessage/' + seller + '/testcustomer/http%3A%2F%2Ftesturl.com%2F')
       .expect(200, function () {
         let storage = require('../../models/storage')
-        storage.getUnprocessedAdressesYoungerThan(Date.now() - 3 * 1000 /* 3 sec */, function (json) {
-          let rows = JSON.parse(json)
+        ;(async () => {
+          let rows = await storage.getUnprocessedAdressesNewerThanPromise(Date.now() - 3 * 1000 /* 3 sec */)
           rows = rows || {}
           rows.rows = rows.rows || []
           let found = false
@@ -144,7 +144,7 @@ describe('acceptance - loading express', function () {
           }
           assert.ok(found)
           done()
-        })
+        })()
       })
   })
 

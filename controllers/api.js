@@ -41,7 +41,7 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
   satoshiToAsk = Math.floor((req.params.expect / exchangeRate) * 100000000)
   btcToAsk = satoshiToAsk / 100000000
 
-  let address = signer.generateNewAddress()
+  let address = signer.generateNewSegwitAddress()
 
   let addressData = {
     'timestamp': Date.now(),
@@ -79,7 +79,7 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
 
     if (typeof responseBody.error !== 'undefined') { // seller doesnt exist
       console.log(req.id, 'seller doesnt exist. creating...')
-      let address = signer.generateNewAddress()
+      let address = signer.generateNewSegwitAddress()
       let sellerData = {
         'WIF': address.WIF,
         'address': address.address,
@@ -101,8 +101,8 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
 
     res.send(JSON.stringify(answer))
   })().catch((error) => {
-    console.log(req.id, JSON.stringify(error))
-    res.send(JSON.stringify({error: error}))
+    console.log(req.id, error)
+    res.send(JSON.stringify({error: error.message}))
   })
 })
 
@@ -173,7 +173,7 @@ router.get('/payout/:seller/:amount/:currency/:address', async function (req, re
     }
   } catch (error) {
     console.log(req.id, error)
-    return res.send(JSON.stringify({'error': error}))
+    return res.send(JSON.stringify({'error': error.message}))
   }
 })
 
@@ -192,8 +192,8 @@ router.get('/get_seller_balance/:seller', function (req, res) {
     }
     res.send(JSON.stringify(answer))
   })().catch((error) => {
-    console.log(req.id, JSON.stringify(error))
-    res.send(JSON.stringify({'error': error}))
+    console.log(req.id, error)
+    res.send(JSON.stringify({'error': error.message}))
   })
 })
 

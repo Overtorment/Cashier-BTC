@@ -84,22 +84,12 @@ exports.saveSellerPromise = function (sellerId, data) {
   })
 }
 
-exports.getUnprocessedAdressesYoungerThan = function (timestamp, callback) {
-  request.get(config.couchdb + '/_design/address/_view/unprocessed_by_timestamp?startkey=' + timestamp + '&inclusive_end=true&limit=10000&reduce=false&include_docs=true', function (error, response, body) {
-    if (error) {
-      return callback(false, error)
-    }
-    return callback(body)
-  })
+exports.getUnprocessedAdressesNewerThanPromise = function (timestamp) {
+  return rp.get({url: config.couchdb + '/_design/address/_view/unprocessed_by_timestamp?startkey=' + timestamp + '&inclusive_end=true&limit=10000&reduce=false&include_docs=true', json: true})
 }
 
-exports.getPaidAdressesYoungerThan = function (timestamp, callback) {
-  request.get(config.couchdb + '/_design/address/_view/paid_by_timestamp?startkey=' + timestamp + '&inclusive_end=true&limit=1&reduce=false&include_docs=true', function (error, response, body) {
-    if (error) {
-      return callback(false, error)
-    }
-    return callback(body)
-  })
+exports.getPaidAdressesNewerThanPromise = function (timestamp) {
+  return rp.get({url: config.couchdb + '/_design/address/_view/paid_by_timestamp?startkey=' + timestamp + '&inclusive_end=true&limit=10000&reduce=false&include_docs=true', json: true})
 }
 
 exports.saveJobResultsPromise = function (json) {
