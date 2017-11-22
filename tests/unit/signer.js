@@ -19,12 +19,20 @@ describe('unit - signer', function () {
       assert.equal(tx, '0100000000010115b7e9d1f6b8164a0e95544a94f5b0fbfaadc35f8415acd0ec0e58d5ce8c1a1e0100000017160014f90e5bca5635b84bd828064586bd7eb117fee9a9ffffffff01905f0100000000001976a914f7c6c1f9f6142107ed293c8fbf85fbc49eb5f1b988ac02473044022023eef496f43936550e08898d10b254ee910dfd19268341edb2f61b873ccba25502204b722787fabc37c2c9e9575832331b0ba0c3f7cd0c18a6fb90027f4327bd8d850121039425479ea581ebc7f55959da8c2e1a1063491768860386335dd4630b5eeacfc500000000')
       done()
     })
+
+    it('should return valid tx hex for segwit transactions with multiple inputs', function (done) {
+      let signer = require('../../models/signer')
+      let utxos = [ { 'txid': '4e2a536aaf6b0b8a4f439d0343436cd321b8bac9840a24d13b8eed484a257b0b', 'vout': 0, 'address': '3NBtBset4qPD8DZeLw4QbFi6SNjNL8hg7x', 'account': '3NBtBset4qPD8DZeLw4QbFi6SNjNL8hg7x', 'scriptPubKey': 'a914e0d81f03546ab8f29392b488ec62ab355ee7c57387', 'amount': 0.00090000, 'confirmations': 67, 'spendable': false, 'solvable': false, 'safe': true }, { 'txid': '09e1b78d4ecd95dd4c7dbc840a2619da6d02caa345a63b2733f3972666462fbd', 'vout': 0, 'address': '3NBtBset4qPD8DZeLw4QbFi6SNjNL8hg7x', 'account': '3NBtBset4qPD8DZeLw4QbFi6SNjNL8hg7x', 'scriptPubKey': 'a914e0d81f03546ab8f29392b488ec62ab355ee7c57387', 'amount': 0.00190000, 'confirmations': 142, 'spendable': false, 'solvable': false, 'safe': true } ]
+      let tx = signer.createSegwitTransaction(utxos, '1Pb81K1xJnMjUfFgKUbva6gr1HCHXxHVnr', 0.0028, 0.0002, 'L4iRvejJG9gRhKVc3rZm5haoyd4EuCi77G91DnXRrvNDqiXktkXh')
+      assert.equal(tx, '010000000001020b7b254a48ed8e3bd1240a84c9bab821d36c4343039d434f8a0b6baf6a532a4e00000000171600141e16a923b1a9e8d0c2a044030608a6aa13f97e9affffffffbd2f46662697f333273ba645a3ca026dda19260a84bc7d4cdd95cd4e8db7e10900000000171600141e16a923b1a9e8d0c2a044030608a6aa13f97e9affffffff01a0f70300000000001976a914f7c6c1f9f6142107ed293c8fbf85fbc49eb5f1b988ac02483045022100b3e001b880a7a18294640165cc40c777669534803cee7206c8d3f03531bb315502204642a4569576a2e9e77342c7a9aaa508a21248b7720fe0f9e6d76713951c133001210314389c888e9669ae05739819fc7c43d7a50fdeabd2a8951f9607c8cad394fd4b02473044022078bd4f47178ce13c4fbf77c5ce78c80ac10251aa053c68c8febb21ce228f844e02207b02bdd754fbc2df9f62ea98e7dbd6c43e760b8f78c7c00b43512a06b498adb501210314389c888e9669ae05739819fc7c43d7a50fdeabd2a8951f9607c8cad394fd4b00000000')
+      done()
+    })
   })
 
   describe('WIF2address()', function () {
     it('should convert WIF to segwit P2SH address', function (done) {
       let signer = require('../../models/signer')
-      let address = signer.WIF2address('L55uHs7pyz7rP18K38kB7kqDVNJaeYFzJtZyC3ZjD2c684dzXQWs')
+      let address = signer.WIF2segwitAddress('L55uHs7pyz7rP18K38kB7kqDVNJaeYFzJtZyC3ZjD2c684dzXQWs')
       assert.equal('3FSL9x8P8cQ74iW2HLP6JPGPRgc4K2FnsU', address)
       done()
     })
@@ -33,10 +41,10 @@ describe('unit - signer', function () {
   describe('generateNewAddress()', function () {
     it('should generate new address', function (done) {
       let signer = require('../../models/signer')
-      let address = signer.generateNewAddress()
+      let address = signer.generateNewSegwitAddress()
       assert.ok(address.WIF)
       assert.ok(address.address)
-      assert.equal(address.address, signer.WIF2address(address.WIF))
+      assert.equal(address.address, signer.WIF2segwitAddress(address.WIF))
       done()
     })
   })

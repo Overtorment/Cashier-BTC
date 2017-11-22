@@ -129,13 +129,13 @@ describe('integration - storage', function () {
           assert.equal(data2.doctype, 'address')
 
           // now, testing if getUnprocessedAdressesYoungerThan() works
-          storage.getUnprocessedAdressesYoungerThan(data2.timestamp, function (data3) {
+          ;(async () => {
+            let data3 = await storage.getUnprocessedAdressesNewerThanPromise(data2.timestamp)
             if (!data3) throw new Error()
-            data3 = JSON.parse(data3)
             data3 = data3['rows'][0]['doc']
-            assert.equal(data3._id, response.id) // its the same document we saved
+            assert.equal(data3._id, response.id)
             done()
-          })
+          })()
         })
       })
     })

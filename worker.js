@@ -23,17 +23,12 @@ require('./smoke-test')
 ;(async () => {
   while (1) {
     console.log('worker.js', '.')
-    await getJob().then(processJob).then(() => new Promise((resolve) => setTimeout(resolve, 15000))).catch((err) => console.log('worker.js', err))
+    let wait = ms => new Promise(resolve => setTimeout(resolve, ms))
+    let job = await storage.getUnprocessedAdressesNewerThanPromise(Date.now() - config.process_unpaid_for_period)
+    await processJob(job)
+    await wait(15000)
   }
 })()
-
-function getJob () {
-  return new Promise(function (resolve) {
-    storage.getUnprocessedAdressesYoungerThan(Date.now() - config.process_unpaid_for_period, function (json) {
-      return resolve(JSON.parse(json))
-    })
-  })
-}
 
 async function processJob (rows) {
   rows = rows || {}
