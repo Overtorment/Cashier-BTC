@@ -141,9 +141,16 @@ router.get('/payout/:seller/:amount/:currency/:address', async function (req, re
     if (seller === false || typeof seller.error !== 'undefined') {
       return res.send(JSON.stringify({'error': 'no such seller'}))
     }
-    let received = await blockchain.getreceivedbyaddress(seller.address)
 
-    if (+received[1].result === +received[0].result && received[0].result >= btcToPay) { // balance is ok
+    let responses = await blockchain.listunspent(seller.address)
+    let amount = 0
+    for (const utxo of responses.result) {
+      if (utxo.confirmations >= 2) {
+        amount += utxo.amount
+      }
+    }
+
+    if (amount >= btcToPay) { // balance is ok
       let unspentOutputs = await blockchain.listunspent(seller.address)
       console.log(req.id, 'sending', btcToPay, 'from', req.params.seller, '(', seller.address, ')', 'to', req.params.address)
       let createTx = signer.createTransaction
@@ -151,7 +158,7 @@ router.get('/payout/:seller/:amount/:currency/:address', async function (req, re
         // assume source address is SegWit P2SH
         createTx = signer.createSegwitTransaction
       }
-      let tx = createTx(unspentOutputs.result, req.params.address, btcToPay, 0.0001, seller.WIF)
+      let tx = createTx(unspentOutputs.result, req.params.address, btcToPay, 0.0001, seller.WIF, seller.address)
       console.log(req.id, 'broadcasting', tx)
       let broadcastResult = await blockchain.broadcastTransaction(tx)
       console.log(req.id, 'broadcast result:', JSON.stringify(broadcastResult))
@@ -169,11 +176,11 @@ router.get('/payout/:seller/:amount/:currency/:address', async function (req, re
       res.send(JSON.stringify(broadcastResult))
     } else {
       console.log(req.id, 'not enough balance')
-      return res.send(JSON.stringify({'error': 'not enough balance'}))
+      return res.send({'error': 'not enough balance'})
     }
   } catch (error) {
     console.log(req.id, error)
-    return res.send(JSON.stringify({'error': error.message}))
+    return res.send({'error': error.message})
   }
 })
 
