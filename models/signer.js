@@ -12,12 +12,14 @@ let bitcoinjs = require('bitcoinjs-lib')
 
 // this function and bitcore-lib are kept for backward compatibility
 // TODO: rewrite on bitcoinjs or remove completely
-exports.createTransaction = function (utxos, toAddress, amount, fixedFee, WIF) {
+exports.createTransaction = function (utxos, toAddress, amount, fixedFee, WIF, changeAddress) {
   amount = parseInt((amount * 100000000).toFixed(0))
   fixedFee = parseInt((fixedFee * 100000000).toFixed(0))
 
   let pk = new bitcore.PrivateKey.fromWIF(WIF) // eslint-disable-line new-cap
   let fromAddress = (pk.toPublicKey()).toAddress(bitcore.Networks.livenet)
+
+  changeAddress = changeAddress || fromAddress
 
   let transaction = new bitcore.Transaction()
 
@@ -35,13 +37,16 @@ exports.createTransaction = function (utxos, toAddress, amount, fixedFee, WIF) {
   transaction
     .to(toAddress, amount - fixedFee)
     .fee(fixedFee)
-    .change(fromAddress)
+    .change(changeAddress)
     .sign(pk)
 
   return transaction.uncheckedSerialize()
 }
 
-exports.createSegwitTransaction = function (utxos, toAddress, amount, fixedFee, WIF) {
+exports.createSegwitTransaction = function (utxos, toAddress, amount, fixedFee, WIF, changeAddress) {
+  changeAddress = changeAddress || exports.WIF2segwitAddress(WIF)
+
+  let feeInSatoshis = parseInt((fixedFee * 100000000).toFixed(0))
   let keyPair = bitcoinjs.ECPair.fromWIF(WIF)
   let pubKey = keyPair.getPublicKeyBuffer()
   let pubKeyHash = bitcoinjs.crypto.hash160(pubKey)
@@ -50,14 +55,17 @@ exports.createSegwitTransaction = function (utxos, toAddress, amount, fixedFee, 
   let txb = new bitcoinjs.TransactionBuilder()
   let unspentAmount = 0
   for (const unspent of utxos) {
+    if (unspent.confirmations < 2) { // using only confirmed outputs
+      continue
+    }
     txb.addInput(unspent.txid, unspent.vout)
     unspentAmount += parseInt(((unspent.amount) * 100000000).toFixed(0))
   }
   let amountToOutput = parseInt(((amount - fixedFee) * 100000000).toFixed(0))
   txb.addOutput(toAddress, amountToOutput)
-  if (amountToOutput + parseInt((fixedFee * 100000000).toFixed(0)) !== unspentAmount) {
+  if (amountToOutput + feeInSatoshis < unspentAmount) {
     // sending less than we have, so the rest should go back
-    txb.addOutput(exports.WIF2segwitAddress(WIF), unspentAmount - amountToOutput)
+    txb.addOutput(changeAddress, unspentAmount - amountToOutput - feeInSatoshis)
   }
 
   for (let c = 0; c < utxos.length; c++) {
