@@ -4,7 +4,7 @@ Cashier-BTC
 v2 refactored and improved
 ---------------------------
 
-[![JavaScript Style Guide](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/) Tests: [![CircleCI](https://circleci.com/gh/Overtorment/Cashier-BTC.svg?style=svg)](https://circleci.com/gh/Overtorment/Cashier-BTC)
+[![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com) Tests: [![CircleCI](https://circleci.com/gh/Overtorment/Cashier-BTC.svg?style=svg)](https://circleci.com/gh/Overtorment/Cashier-BTC)
 
 Self-hosted Node.js Bitcoin payment gateway. Provides REST API (microservice).
 Process Bitcoin payments on your end, securely, with no comission.
