@@ -1,8 +1,7 @@
 version: 2
 jobs:
   build:
-    docker:
-      - image: circleci/node:8.5.0
+    machine: true
 
     working_directory: ~/Cashier-BTC
 
@@ -12,6 +11,9 @@ jobs:
       - run:
           command: |
             echo Setting up
+            curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+            sudo apt-get install -y nodejs
+
             npm install
             cp config.js.dev config.js
 
