@@ -12,33 +12,9 @@ jobs:
           command: |
             echo Setting up
             curl -sL https://deb.nodesource.com/setup_9.x | sudo -E bash -
-            sudo apt-get install -y nodejs
-
+            sudo apt-get install -y nodejs couchdb
             npm install
             cp config.js.dev config.js
-
-            sudo apt-get install --yes build-essential curl git
-            sudo apt-get install --yes python-software-properties python g++ make
-            sudo apt-get install -y erlang-dev erlang-manpages erlang-base-hipe erlang-eunit erlang-nox erlang-xmerl erlang-inets
-            sudo apt-get install -y libmozjs185-dev libicu-dev libcurl4-gnutls-dev libtool
-            cd ~/
-            wget http://ftp.fau.de/apache/couchdb/source/1.6.1/apache-couchdb-1.6.1.tar.gz
-            tar xvzf apache-couchdb-*
-            cd apache-couchdb-*
-            ./configure && make
-            sudo make install
-            sudo useradd -d /var/lib/couchdb couchdb || true
-            sudo chown -R couchdb: /var/lib/couchdb /var/log/couchdb || true
-            sudo chown -R couchdb: /usr/local/var/{lib,log,run}/couchdb /usr/local/etc/couchdb || true
-            sudo chmod 0770 /usr/local/var/{lib,log,run}/couchdb/ || true
-            sudo chmod 664 /usr/local/etc/couchdb/*.ini || true
-            sudo chmod 775 /usr/local/etc/couchdb/*.d || true
-            cd /etc/init.d
-            sudo ln -s /usr/local/etc/init.d/couchdb couchdb || true
-            sudo /etc/init.d/couchdb start || true
-            sudo update-rc.d couchdb defaults || true
-            sudo service couchdb restart || true
-            sleep 5
             curl http://127.0.0.1:5984/ || true
             curl -s -X PUT http://localhost:5984/_config/admins/user -d '"pass"' || true
             curl -s -X PUT http://user:pass@localhost:5984/cashier-btc || true
