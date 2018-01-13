@@ -181,3 +181,9 @@ This breaks the `/payout/` call, but at least the funds from orders will be forw
 
 Small risk remains with hot wallets still having their `WIFs` in the database, but this is a reality any other Bitcoin processor
 has to live in.
+
+Alternatives
+-----------
+
+* https://github.com/btcpayserver/btcpayserver
+* Your project here
