@@ -20,6 +20,46 @@ describe('unit - signer', function () {
       done()
     })
 
+    it('should return valid tx hex for RBF-able segwit transactions', function (done) {
+      let signer = require('../../models/signer')
+      let utxos = [{ txid: '1e1a8cced5580eecd0ac15845fc3adfafbb0f5944a54950e4a16b8f6d1e9b715', vout: 1, address: '3Bsssbs4ANCGNETvGLJ3Fvri6SiVnH1fbi', account: '3Bsssbs4ANCGNETvGLJ3Fvri6SiVnH1fbi', scriptPubKey: 'a9146fbf1cee74734503297e46a0db3e3fbb06f2e9d387', amount: 0.1, confirmations: 108, spendable: false, solvable: false, safe: true }]
+      let txhex = signer.createSegwitTransaction(utxos, '1Pb81K1xJnMjUfFgKUbva6gr1HCHXxHVnr', 0.001, 0.0001, 'KyWpryAKPiXXbipxWhtprZjSLVjp22sxbVnJssq2TCNQxs1SuMeD', '3Bsssbs4ANCGNETvGLJ3Fvri6SiVnH1fbi', 0)
+      assert.equal(txhex, '0100000000010115b7e9d1f6b8164a0e95544a94f5b0fbfaadc35f8415acd0ec0e58d5ce8c1a1e0100000017160014f90e5bca5635b84bd828064586bd7eb117fee9a90000000002905f0100000000001976a914f7c6c1f9f6142107ed293c8fbf85fbc49eb5f1b988ace00f97000000000017a9146fbf1cee74734503297e46a0db3e3fbb06f2e9d38702483045022100bd687693e57161282a80affb82f18386cbf319bca72ca2c16320b0f3b087bee802205e22a9a16b86628ea08eab83aebec1348c476e9d0c90cd41aa73c47f50d86aab0121039425479ea581ebc7f55959da8c2e1a1063491768860386335dd4630b5eeacfc500000000')
+      // now, testing change addess, destination address, amounts & fees...
+      let bitcoinjs = require('bitcoinjs-lib')
+      let tx = bitcoinjs.Transaction.fromHex(txhex)
+      assert.equal(bitcoinjs.address.fromOutputScript(tx.outs[0].script), '1Pb81K1xJnMjUfFgKUbva6gr1HCHXxHVnr')
+      assert.equal(bitcoinjs.address.fromOutputScript(tx.outs[1].script), '3Bsssbs4ANCGNETvGLJ3Fvri6SiVnH1fbi')
+      assert.equal(tx.outs[0].value, 90000) // 0.0009 because we deducted fee 0.0001
+      assert.equal(tx.outs[1].value, 9900000) // 0.099 because 0.1 - 0.001
+      done()
+    })
+
+    it('should create Replace-By-Fee tx, given txhex', () => {
+      let txhex = '0100000000010115b7e9d1f6b8164a0e95544a94f5b0fbfaadc35f8415acd0ec0e58d5ce8c1a1e0100000017160014f90e5bca5635b84bd828064586bd7eb117fee9a90000000002905f0100000000001976a914f7c6c1f9f6142107ed293c8fbf85fbc49eb5f1b988ace00f97000000000017a9146fbf1cee74734503297e46a0db3e3fbb06f2e9d38702483045022100bd687693e57161282a80affb82f18386cbf319bca72ca2c16320b0f3b087bee802205e22a9a16b86628ea08eab83aebec1348c476e9d0c90cd41aa73c47f50d86aab0121039425479ea581ebc7f55959da8c2e1a1063491768860386335dd4630b5eeacfc500000000'
+      let signer = require('../../models/signer')
+      let bitcoinjs = require('bitcoinjs-lib')
+      let dummyUtxodata = {
+        '15b7e9d1f6b8164a0e95544a94f5b0fbfaadc35f8415acd0ec0e58d5ce8c1a1e': { // txid we use output from
+          1: 666 // output index and it's value in satoshi
+        }
+      }
+      let newhex = signer.createRBFSegwitTransaction(txhex, {'1Pb81K1xJnMjUfFgKUbva6gr1HCHXxHVnr': '3BDsBDxDimYgNZzsqszNZobqQq3yeUoJf2'}, 0.0001, 'KyWpryAKPiXXbipxWhtprZjSLVjp22sxbVnJssq2TCNQxs1SuMeD', dummyUtxodata)
+      let oldTx = bitcoinjs.Transaction.fromHex(txhex)
+      let newTx = bitcoinjs.Transaction.fromHex(newhex)
+      // just checking old tx...
+      assert.equal(bitcoinjs.address.fromOutputScript(oldTx.outs[0].script), '1Pb81K1xJnMjUfFgKUbva6gr1HCHXxHVnr') // old DESTINATION address
+      assert.equal(bitcoinjs.address.fromOutputScript(oldTx.outs[1].script), '3Bsssbs4ANCGNETvGLJ3Fvri6SiVnH1fbi') // old CHANGE address
+      assert.equal(oldTx.outs[0].value, 90000) // 0.0009 because we deducted fee 0.0001
+      assert.equal(oldTx.outs[1].value, 9900000) // 0.099 because 0.1 - 0.001
+      // finaly, new tx checks...
+      assert.equal(oldTx.outs[0].value, newTx.outs[0].value) // DESTINATION output amount remains unchanged
+      assert.equal(oldTx.outs[1].value - newTx.outs[1].value, 0.0001 * 100000000) // CHANGE output decreased on the amount of fee delta
+      assert.equal(bitcoinjs.address.fromOutputScript(newTx.outs[0].script), '3BDsBDxDimYgNZzsqszNZobqQq3yeUoJf2') // new DESTINATION address
+      assert.equal(bitcoinjs.address.fromOutputScript(newTx.outs[1].script), '3Bsssbs4ANCGNETvGLJ3Fvri6SiVnH1fbi') // CHANGE address remains
+      assert.equal(oldTx.ins[0].sequence + 1, newTx.ins[0].sequence)
+    })
+
     it('should return valid tx hex for segwit transactions with multiple inputs', function (done) {
       let signer = require('../../models/signer')
       let utxos = [ { 'txid': '4e2a536aaf6b0b8a4f439d0343436cd321b8bac9840a24d13b8eed484a257b0b', 'vout': 0, 'address': '3NBtBset4qPD8DZeLw4QbFi6SNjNL8hg7x', 'account': '3NBtBset4qPD8DZeLw4QbFi6SNjNL8hg7x', 'scriptPubKey': 'a914e0d81f03546ab8f29392b488ec62ab355ee7c57387', 'amount': 0.00090000, 'confirmations': 67, 'spendable': false, 'solvable': false, 'safe': true }, { 'txid': '09e1b78d4ecd95dd4c7dbc840a2619da6d02caa345a63b2733f3972666462fbd', 'vout': 0, 'address': '3NBtBset4qPD8DZeLw4QbFi6SNjNL8hg7x', 'account': '3NBtBset4qPD8DZeLw4QbFi6SNjNL8hg7x', 'scriptPubKey': 'a914e0d81f03546ab8f29392b488ec62ab355ee7c57387', 'amount': 0.00190000, 'confirmations': 142, 'spendable': false, 'solvable': false, 'safe': true } ]
