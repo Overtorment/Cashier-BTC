@@ -183,7 +183,22 @@ Small risk remains with hot wallets still having their `WIFs` in the database, b
 has to live in.
 
 Alternatives
------------
+============
+
+Opensource alternatives
+----------------------
 
 * https://github.com/btcpayserver/btcpayserver
 * Your project here
+
+SaaS alternatives
+-----------------
+
+* https://coingate.com/accept-bitcoin
+* https://www.coinpayments.net
+* https://coinsbank.com/merchant
+* https://www.blockonomics.co/merchants#/page1
+* ~~coinbase~~ crap
+* ~~bitpay~~ crap
+* ~~Coinify~~ crap
+* ~~Gocoin~~ crap
