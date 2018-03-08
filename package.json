@@ -8,7 +8,7 @@
   "author": "Igor Korsakov",
   "scripts": {
     "postinstall": "mkdir qr && chmod 777 qr",
-    "test": "node ./node_modules/.bin/standard && node ./node_modules/.bin/mocha --exit tests/*",
+    "test": "nodejs ./node_modules/.bin/standard && nodejs ./node_modules/.bin/mocha --exit tests/*",
     "clean": "rm -r -f ./node_modules/ && rm -r -f ./qr/"
   },
   "dependencies": {
