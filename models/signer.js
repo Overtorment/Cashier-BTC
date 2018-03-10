@@ -9,6 +9,7 @@
 
 let bitcore = require('bitcore-lib')
 let bitcoinjs = require('bitcoinjs-lib')
+let config = require('../config')
 
 // this function and bitcore-lib are kept for backward compatibility
 // TODO: rewrite on bitcoinjs or remove completely
@@ -136,6 +137,12 @@ exports.generateNewSegwitAddress = function () {
   let witnessScript = bitcoinjs.script.witnessPubKeyHash.output.encode(bitcoinjs.crypto.hash160(pubKey))
   let scriptPubKey = bitcoinjs.script.scriptHash.output.encode(bitcoinjs.crypto.hash160(witnessScript))
   let address = bitcoinjs.address.fromOutputScript(scriptPubKey)
+
+  if (config.testnet) {
+    let testnet = bitcoinjs.networks.testnet
+    keyPair = bitcoinjs.ECPair.makeRandom({ network: testnet })
+    address = keyPair.getAddress()
+  }
 
   return {
     'address': address,

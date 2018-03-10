@@ -1,5 +1,6 @@
 module.exports = {
   'port': 2222,
+  'testnet': false,
   'base_url': 'http://localhost:2222',
   'base_url_qr': 'http://localhost:2222',
   'couchdb': 'http://user:pass@localhost:5984/cashier-btc',  // install locally or use https://cloudant.com
