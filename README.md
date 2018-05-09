@@ -198,6 +198,7 @@ SaaS alternatives
 * https://www.coinpayments.net
 * https://coinsbank.com/merchant
 * https://www.blockonomics.co/merchants#/page1
+* https://www.paybear.io
 * ~~coinbase~~ crap
 * ~~bitpay~~ crap
 * ~~Coinify~~ crap
