@@ -189,6 +189,7 @@ Opensource alternatives
 ----------------------
 
 * https://github.com/btcpayserver/btcpayserver
+* http://docs.electrum.org/en/latest/merchant.html
 * Your project here
 
 SaaS alternatives
