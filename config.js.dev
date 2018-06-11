@@ -10,7 +10,7 @@ module.exports = {
   'small_amount_threshhold': 0.005, // amounts higher than that will require confirmed balance
   'process_unpaid_for_period': 24 * 3600 * 1000, // worker that checks status of addresses
   'process_paid_for_period': 30 * 24 * 3600 * 1000, // worker2 that sweeps temporary wallets
-  'exchange_update_interval': 5 * 1000 //the time interval to update the currencies. 5 * 1000 = 5 * 1000 miliseconds = 5 seconds. Coinbase allows up to 10000 requests per hour per app.
+  'exchange_update_interval': 5 * 1000, //the time interval to update the currencies. 5 * 1000 = 5 * 1000 miliseconds = 5 seconds. Coinbase allows up to 10000 requests per hour per app.
   'currencies': [
     'USD', 'EUR', 'TRY'
   ]
