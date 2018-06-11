@@ -33,28 +33,27 @@ let rp = require('request-promise')
 app.use(bodyParser.urlencoded({ extended: false })) // parse application/x-www-form-urlencoded
 app.use(bodyParser.json(null)) // parse application/json
 
-global.btcUsd = 7000 // initial
-global.btcEur = 6000
+global.exchanges = {}
 
 app.use('/qr', express.static('qr'))
 app.use(require('./controllers/api'))
 app.use(require('./controllers/website'))
 
-let updateExchangeRate = async function (pair) {
+let updateExchangeRate = async function () {
   let json
   try {
-    json = await rp.get({url: 'https://www.bitstamp.net/api/v2/ticker/' + pair, json: true})
+    for (let i = 0; i < config.currencies.length; i++) { // foreach currency defined in config.js
+      let currency = config.currencies[i]
+      json = await rp.get({url: 'https://api.coinbase.com/v2/prices/BTC-' + currency + '/spot', json: true}) // get spot price, excluding coinbase sell/buy fees
+      global.exchanges[currency] = json.data.amount
+    }
   } catch (err) {
     return console.log(err.message)
   }
-  switch (pair) {
-    case 'btceur': global.btcEur = json.ask; break
-    case 'btcusd': global.btcUsd = json.ask; break
-  }
 }
 
-updateExchangeRate('btcusd').then(updateExchangeRate('btceur'))
-setInterval(() => updateExchangeRate('btcusd').then(updateExchangeRate('btceur')), 5 * 60 * 1000)
+updateExchangeRate()
+setInterval(() => updateExchangeRate(), config.exchange_update_interval)
 
 require('./smoke-test')
 require('./deploy-design-docs') // checking design docs in Couchdb
