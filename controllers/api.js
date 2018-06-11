@@ -27,16 +27,8 @@ let signer = require('../models/signer')
 router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callback_url', function (req, res) {
   let exchangeRate, btcToAsk, satoshiToAsk
 
-  switch (req.params.currency) {
-    case 'USD': exchangeRate = btcUsd
-      break
-    case 'EUR': exchangeRate = btcEur
-      break
-    case 'BTC': exchangeRate = 1
-      break
-    default:
-      return res.send(JSON.stringify({'error': 'bad currency'}))
-  }
+  if (undefined === typeof exchanges[req.params.currency]) return res.send(JSON.stringify({'error': 'bad currency'}))
+  else exchangeRate = exchanges[req.params.currency]
 
   satoshiToAsk = Math.floor((req.params.expect / exchangeRate) * 100000000)
   btcToAsk = satoshiToAsk / 100000000
@@ -202,6 +194,24 @@ router.get('/get_seller_balance/:seller', function (req, res) {
     console.log(req.id, error)
     res.send(JSON.stringify({'error': error.message}))
   })
+})
+
+router.get('/get_exchange/:fromCurrency', function (req, res) {
+  let exchangeRate, btcRate, satoshiRate
+  if (undefined === typeof exchanges[req.params.fromCurrency]) return res.send(JSON.stringify({'error': 'bad currency'}))
+  else exchangeRate = exchanges[req.params.fromCurrency]
+
+  satoshiRate = Math.floor((req.params.expect / exchangeRate) * 100000000)
+  btcRate = satoshiRate / 100000000
+
+  let response = {
+    'from': req.params.fromCurrency,
+    'to': 'BTC',
+    'rate': btcRate,
+    'satoshiRate': satoshiRate
+  }
+
+  res.send(JSON.stringify(response))
 })
 
 module.exports = router
