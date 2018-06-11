@@ -14,8 +14,7 @@
  *
  */
 
-/* global btcUsd */
-/* global btcEur */
+/* global exchanges */
 
 let express = require('express')
 let router = express.Router()
