@@ -48,3 +48,4 @@ exports.getreceivedbyaddress = getreceivedbyaddress
 exports.getblockchaininfo = getblockchaininfo
 exports.listunspent = listunspent
 exports.broadcastTransaction = broadcastTransaction
+exports.getTransactionInfo = getTransactionInfo

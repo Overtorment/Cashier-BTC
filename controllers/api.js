@@ -213,4 +213,14 @@ router.get('/get_exchange/:fromCurrency', function (req, res) {
   res.send(JSON.stringify(response))
 })
 
+router.get('/get_tx_info/:txId', async function (req, res) {
+  let transactionResult = await blockchain.getTransactionInfo(req.params.txId)
+  console.log(req.id, 'transaction result:', JSON.stringify(transactionResult))
+  let data = {
+    'txId': req.params.txId,
+    'result': transactionResult
+  }
+  res.send(JSON.stringify(data))
+})
+
 module.exports = router
