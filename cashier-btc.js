@@ -44,6 +44,10 @@ let updateExchangeRate = async function () {
   try {
     for (let i = 0; i < config.currencies.length; i++) { // foreach currency defined in config.js
       let currency = config.currencies[i]
+      if (currency == 'BTC') {
+        global.exchanges[currency] = 1
+        continue
+      }
       json = await rp.get({url: 'https://api.coinbase.com/v2/prices/BTC-' + currency + '/spot', json: true}) // get spot price, excluding coinbase sell/buy fees
       global.exchanges[currency] = json.data.amount
     }
