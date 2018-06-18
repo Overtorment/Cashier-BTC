@@ -35,6 +35,10 @@ function listunspent (address) {
   return client.request('listunspent', [0, 9999999, [address], true])
 }
 
+function getTransactionInfo (txid) {
+  return client.request('gettransaction', [txid])
+}
+
 function broadcastTransaction (tx) {
   return client.request('sendrawtransaction', [tx])
 }
