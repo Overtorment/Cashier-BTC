@@ -44,7 +44,7 @@ let updateExchangeRate = async function () {
   try {
     for (let i = 0; i < config.currencies.length; i++) { // foreach currency defined in config.js
       let currency = config.currencies[i]
-      if (currency == 'BTC') {
+      if (currency === 'BTC') {
         global.exchanges[currency] = 1
         continue
       }
