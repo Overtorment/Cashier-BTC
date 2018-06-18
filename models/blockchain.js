@@ -18,10 +18,10 @@ function importaddress (address) {
   return client.request('importaddress', [address, address, false])
 }
 
-function getreceivedbyaddress (address) {
+function getreceivedbyaddress (address, confirmationCount) {
   let reqs = [
     client.request('getreceivedbyaddress', [address, 0]),
-    client.request('getreceivedbyaddress', [address, 3])
+    client.request('getreceivedbyaddress', [address, confirmationCount])
   ]
 
   return Promise.all(reqs)

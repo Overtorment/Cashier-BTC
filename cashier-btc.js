@@ -35,6 +35,29 @@ app.use(bodyParser.json(null)) // parse application/json
 
 global.exchanges = {}
 
+const { createLogger, format, transports } = require('winston')
+const { combine, timestamp, printf } = format
+
+const myFormat = printf(info => {
+  return `${info.timestamp} ${info.level}: ${info.message}`
+})
+
+const logger = createLogger({
+  level: config.logging_level,
+  format: combine(
+    timestamp(),
+    myFormat
+  ), // winston.format.json(),
+  transports: [
+    //
+    // - Write to all logs with level `info` and below to `combined.log`
+    // - Write all logs error (and below) to `error.log`.
+    // or new transports.Console()
+    new transports.File({ filename: './logs/error.log', level: 'error' }),
+    new transports.File({ filename: './logs/combined.log' })
+  ]
+})
+
 app.use('/qr', express.static('qr'))
 app.use(require('./controllers/api'))
 app.use(require('./controllers/website'))
@@ -52,7 +75,7 @@ let updateExchangeRate = async function () {
       global.exchanges[currency] = json.data.amount
     }
   } catch (err) {
-    return console.log(err.message)
+    return logger.error(err.message)
   }
 }
 
@@ -63,7 +86,7 @@ require('./smoke-test')
 require('./deploy-design-docs') // checking design docs in Couchdb
 
 let server = app.listen(config.port, function () {
-  console.log('Listening on port %d', config.port)
+  logger.info('Listening on port ' + config.port)
 })
 
 module.exports = server
