@@ -76,7 +76,8 @@ TODO
 * [x] ~~Add tests~~
 * [x] ~~Better abstractioning (add more abstraction layers)~~
 * [x] ~~CI~~
-* [ ] Better logging & error handling
+* [x] ~~logging~~
+* [ ] Better error handling
 * [ ] Stats
 * [ ] Better tests
 * [x] ~~Ditch bitcore-lib in favor of bitcoinjs-lib~~
@@ -91,7 +92,7 @@ API
 ### GET /request_payment/:expect/:currency/:message/:seller/:customer/:callback_url
 
 
-Create a request to pay, supported currencies: BTC, USD, EUR. Non-btc currency is converted to btc using current rate from bitstamp.com.
+Create a request to pay, supported currencies: BTC, USD, EUR, TRY. Non-btc currency is converted to btc using current rate from coinbase.com spot api.
 Returns a json document with QR code to be displayed to the payer, and a unique address for that particular payment (you can use it as invoice id).
 Message will be displayed to the client (for example, you can write "Payment for goods"). Seller and customer - system field, here you can
 write the application that created the request and the payer id. Keep Seller field private, it is also used for payouts.

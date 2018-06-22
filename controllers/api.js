@@ -14,8 +14,7 @@
  *
  */
 
-/* global btcUsd */
-/* global btcEur */
+/* global exchanges */
 
 let express = require('express')
 let router = express.Router()
@@ -24,19 +23,34 @@ let blockchain = require('../models/blockchain')
 let storage = require('../models/storage')
 let signer = require('../models/signer')
 
+const { createLogger, format, transports } = require('winston')
+const { combine, timestamp, printf } = format
+
+const myFormat = printf(info => {
+  return `${info.timestamp} ${info.level}: ${info.message}`
+})
+
+const logger = createLogger({
+  level: config.logging_level,
+  format: combine(
+    timestamp(),
+    myFormat
+  ), // winston.format.json(),
+  transports: [
+    //
+    // - Write to all logs with level `info` and below to `combined.log`
+    // - Write all logs error (and below) to `error.log`.
+    // or new transports.Console()
+    new transports.File({ filename: './logs/error.log', level: 'error' }),
+    new transports.File({ filename: './logs/combined.log' })
+  ]
+})
+
 router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callback_url', function (req, res) {
   let exchangeRate, btcToAsk, satoshiToAsk
 
-  switch (req.params.currency) {
-    case 'USD': exchangeRate = btcUsd
-      break
-    case 'EUR': exchangeRate = btcEur
-      break
-    case 'BTC': exchangeRate = 1
-      break
-    default:
-      return res.send(JSON.stringify({'error': 'bad currency'}))
-  }
+  if (undefined === typeof exchanges[req.params.currency]) return res.send(JSON.stringify({'error': 'bad currency'}))
+  else exchangeRate = exchanges[req.params.currency]
 
   satoshiToAsk = Math.floor((req.params.expect / exchangeRate) * 100000000)
   btcToAsk = satoshiToAsk / 100000000
@@ -74,11 +88,11 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
   };
 
   (async function () {
-    console.log(req.id, 'checking seller existance...')
+    logger.info(req.id + ' checking seller existance...')
     let responseBody = await storage.getSellerPromise(req.params.seller)
 
     if (typeof responseBody.error !== 'undefined') { // seller doesnt exist
-      console.log(req.id, 'seller doesnt exist. creating...')
+      logger.info(req.id + ' seller doesnt exist. creating...')
       let address = signer.generateNewSegwitAddress()
       let sellerData = {
         'WIF': address.WIF,
@@ -88,27 +102,27 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
         '_id': req.params.seller,
         'doctype': 'seller'
       }
-      console.log(req.id, 'created', req.params.seller, '(', sellerData.address, ')')
+      logger.info(req.id + ' created ' + req.params.seller + ' (' + sellerData.address + ')')
       await storage.saveSellerPromise(req.params.seller, sellerData)
       await blockchain.importaddress(sellerData.address)
     } else { // seller exists
-      console.log(req.id, 'seller already exists')
+      logger.warn(req.id + ' seller already exists')
     }
 
-    console.log(req.id, 'created address', addressData.address)
+    logger.info(req.id + ' created address' + addressData.address)
     await storage.saveAddressPromise(addressData)
     await blockchain.importaddress(addressData.address)
 
     res.send(JSON.stringify(answer))
   })().catch((error) => {
-    console.log(req.id, error)
+    logger.error(req.id + ' ' + error)
     res.send(JSON.stringify({error: error.message}))
   })
 })
 
 router.get('/check_payment/:address', function (req, res) {
   let promises = [
-    blockchain.getreceivedbyaddress(req.params.address),
+    blockchain.getreceivedbyaddress(req.params.address, config.minimum_confirmation_required),
     storage.getAddressPromise(req.params.address)
   ]
 
@@ -124,14 +138,16 @@ router.get('/check_payment/:address', function (req, res) {
       }
       res.send(JSON.stringify(answer))
     } else {
-      console.log(req.id, 'storage error', JSON.stringify(addressJson))
+      logger.error(req.id + ' storage error ' + JSON.stringify(addressJson))
       res.send(JSON.stringify({'error': 'storage error'}))
     }
   })
 })
 
 router.get('/payout/:seller/:amount/:currency/:address', async function (req, res) {
+  logger.debug('received payout request for seller ' + req.params.seller + ' to ' + req.params.address + ' of ' + req.params.amount + ' ' + req.params.currency)
   if (req.params.currency !== 'BTC') {
+    logger.warn('payout failed. currency error.')
     return res.send(JSON.stringify({'error': 'bad currency'}))
   }
 
@@ -139,6 +155,7 @@ router.get('/payout/:seller/:amount/:currency/:address', async function (req, re
     let btcToPay = req.params.amount
     let seller = await storage.getSellerPromise(req.params.seller)
     if (seller === false || typeof seller.error !== 'undefined') {
+      logger.warn('payout failed. seller error.')
       return res.send(JSON.stringify({'error': 'no such seller'}))
     }
 
@@ -152,16 +169,16 @@ router.get('/payout/:seller/:amount/:currency/:address', async function (req, re
 
     if (amount >= btcToPay) { // balance is ok
       let unspentOutputs = await blockchain.listunspent(seller.address)
-      console.log(req.id, 'sending', btcToPay, 'from', req.params.seller, '(', seller.address, ')', 'to', req.params.address)
+      logger.info(req.id + ' sending ' + btcToPay + ' from ' + req.params.seller + '(' + seller.address + ') to ' + req.params.address)
       let createTx = signer.createTransaction
       if (seller.address[0] === '3') {
         // assume source address is SegWit P2SH
         createTx = signer.createSegwitTransaction
       }
       let tx = createTx(unspentOutputs.result, req.params.address, btcToPay, 0.0001, seller.WIF, seller.address)
-      console.log(req.id, 'broadcasting', tx)
+      logger.info(req.id + ' broadcasting ' + tx)
       let broadcastResult = await blockchain.broadcastTransaction(tx)
-      console.log(req.id, 'broadcast result:', JSON.stringify(broadcastResult))
+      logger.info(req.id + ' broadcast result: ' + JSON.stringify(broadcastResult))
       let data = {
         'seller': req.params.seller,
         'btc': btcToPay,
@@ -173,13 +190,14 @@ router.get('/payout/:seller/:amount/:currency/:address', async function (req, re
         'doctype': 'payout'
       }
       await storage.savePayoutPromise(data)
+      logger.debug('payout success. result is ' + JSON.stringify(broadcastResult))
       res.send(JSON.stringify(broadcastResult))
     } else {
-      console.log(req.id, 'not enough balance')
+      logger.warn(req.id + ' not enough balance')
       return res.send({'error': 'not enough balance'})
     }
   } catch (error) {
-    console.log(req.id, error)
+    logger.error(req.id + ' ' + error)
     return res.send({'error': error.message})
   }
 })
@@ -188,7 +206,7 @@ router.get('/get_seller_balance/:seller', function (req, res) {
   (async function () {
     let seller = await storage.getSellerPromise(req.params.seller)
     if (seller === false || typeof seller.error !== 'undefined') {
-      console.log(req.id, 'no such seller')
+      logger.warn(req.id + ' no such seller')
       return res.send(JSON.stringify({'error': 'no such seller'}))
     }
 
@@ -199,9 +217,36 @@ router.get('/get_seller_balance/:seller', function (req, res) {
     }
     res.send(JSON.stringify(answer))
   })().catch((error) => {
-    console.log(req.id, error)
+    logger.error(req.id + ' ' + error)
     res.send(JSON.stringify({'error': error.message}))
   })
+})
+
+router.get('/get_exchange/:toCurrency', function (req, res) {
+  let exchangeRate, satoshiRate
+  if (undefined === typeof exchanges[req.params.toCurrency]) return res.send(JSON.stringify({'error': 'bad currency'}))
+  else exchangeRate = exchanges[req.params.toCurrency]
+
+  satoshiRate = exchangeRate / 100000000
+
+  let response = {
+    'from': 'BTC',
+    'to': req.params.toCurrency,
+    'rate': exchangeRate,
+    'satoshiRate': satoshiRate
+  }
+
+  res.send(JSON.stringify(response))
+})
+
+router.get('/get_tx_info/:txId', async function (req, res) {
+  let transactionResult = await blockchain.getTransactionInfo(req.params.txId)
+  logger.info(req.id + ' transaction result: ' + JSON.stringify(transactionResult))
+  let data = {
+    'txId': req.params.txId,
+    'result': transactionResult
+  }
+  res.send(JSON.stringify(data))
 })
 
 module.exports = router

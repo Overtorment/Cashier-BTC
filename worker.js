@@ -20,11 +20,35 @@ let config = require('./config')
 
 require('./smoke-test')
 
+const { createLogger, format, transports } = require('winston')
+const { combine, timestamp, printf } = format
+
+const myFormat = printf(info => {
+  return `${info.timestamp} ${info.level}: ${info.message}`
+})
+
+const logger = createLogger({
+  level: config.logging_level,
+  format: combine(
+      timestamp(),
+      myFormat
+    ), // winston.format.json(),
+  transports: [
+      //
+      // - Write to all logs with level `info` and below to `combined.log`
+      // - Write all logs error (and below) to `error.log`.
+      // or new transports.Console()
+    new transports.File({ filename: './logs/error.log', level: 'error' }),
+    new transports.File({ filename: './logs/combined.log' })
+  ]
+})
+
 ;(async () => {
   while (1) {
-    console.log('worker.js', '.')
+    logger.info('worker.js' + ' tick tock')
     let wait = ms => new Promise(resolve => setTimeout(resolve, ms))
     let job = await storage.getUnprocessedAdressesNewerThanPromise(Date.now() - config.process_unpaid_for_period)
+    logger.info('worker js found ' + job.rows.length + ' records')
     await processJob(job)
     await wait(15000)
   }
@@ -33,23 +57,26 @@ require('./smoke-test')
 async function processJob (rows) {
   rows = rows || {}
   rows.rows = rows.rows || []
-
+  logger.debug('worker js processing rows')
   for (const row of rows.rows) {
     let json = row.doc
-    let received = await blockchain.getreceivedbyaddress(json.address)
-    console.log('worker.js', 'address:', json.address, 'expect:', json.btc_to_ask, 'confirmed:', received[1].result, 'unconfirmed:', received[0].result)
+    let received = await blockchain.getreceivedbyaddress(json.address, config.minimum_confirmation_required)
+    logger.debug('worker.js address:' + json.address + ', expect:' + json.btc_to_ask + ', confirmed:' + received[1].result + ', unconfirmed:' + received[0].result)
     if (
+      (!config.only_accept_equal_or_more_funds && received[1].result > 0) ||
+      (
         (json.btc_to_ask > config.small_amount_threshhold && (received[1].result >= json.btc_to_ask)) ||
         (json.btc_to_ask <= config.small_amount_threshhold && (received[0].result >= json.btc_to_ask))
+      )
       ) {
         // paid ok
       json.processed = 'paid'
       json.paid_on = Date.now()
       await storage.saveJobResultsPromise(json)
-      console.log('worker.js', 'firing callback: ' + json.callback_url)
+      logger.info('worker.js: firing callback: ' + json.callback_url)
       await rp({ uri: json.callback_url, timeout: 10 * 1000 })
-      // marked as paid and fired a callack. why not forward funds instantly?
-      // because in case of zero-conf accepted balance we wound need to wait for a couple of
+      // marked as paid and fired a callback. why not forward funds instantly?
+      // because in case of zero-conf accepted balance we would need to wait for a couple of
       // confirmations till we can forward funds
     }
   }

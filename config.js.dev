@@ -8,6 +8,15 @@ module.exports = {
     'rpc': 'http://user:pass@127.0.0.1:8332'
   },
   'small_amount_threshhold': 0.005, // amounts higher than that will require confirmed balance
-  'process_unpaid_for_period': 24 * 3600 * 1000, // worker that checks status of addresses
-  'process_paid_for_period': 30 * 24 * 3600 * 1000 // worker2 that sweeps temporary wallets
+  'process_unpaid_for_period': 3 * 24 * 3600 * 1000, // worker that checks status of addresses
+  'process_paid_for_period': 3.5 * 24 * 3600 * 1000, // worker2 that sweeps temporary wallets
+  'exchange_update_interval': 5 * 1000, //the time interval to update the currencies. 5 * 1000 = 5 * 1000 miliseconds = 5 seconds. Coinbase allows up to 10000 requests per hour per app.
+  'currencies': [
+    'BTC', 'USD', 'EUR', 'TRY'
+  ],
+  minimum_confirmation_required: 6, //number of confirmations required to consider a payment actually completed.
+  logging_level: 'warn',
+  only_accept_equal_or_more_funds: false // if true, the transaction amount will require to be equal or more than btc_to_ask amount.
+  // If set to false, the callback will be processed after enough transactions. Due to fluctuations in BTC exchange values, the actual amount may differ in BTC, rather than what was asked initially
+  // it will require the confirmed amount to be more than 0 though to process
 }

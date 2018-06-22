@@ -18,10 +18,10 @@ function importaddress (address) {
   return client.request('importaddress', [address, address, false])
 }
 
-function getreceivedbyaddress (address) {
+function getreceivedbyaddress (address, confirmationCount) {
   let reqs = [
     client.request('getreceivedbyaddress', [address, 0]),
-    client.request('getreceivedbyaddress', [address, 3])
+    client.request('getreceivedbyaddress', [address, confirmationCount])
   ]
 
   return Promise.all(reqs)
@@ -35,6 +35,10 @@ function listunspent (address) {
   return client.request('listunspent', [0, 9999999, [address], true])
 }
 
+function getTransactionInfo (txid) {
+  return client.request('gettransaction', [txid])
+}
+
 function broadcastTransaction (tx) {
   return client.request('sendrawtransaction', [tx])
 }
@@ -44,3 +48,4 @@ exports.getreceivedbyaddress = getreceivedbyaddress
 exports.getblockchaininfo = getblockchaininfo
 exports.listunspent = listunspent
 exports.broadcastTransaction = broadcastTransaction
+exports.getTransactionInfo = getTransactionInfo

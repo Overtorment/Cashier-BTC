@@ -150,53 +150,64 @@ describe('acceptance - loading express', function () {
 
   it('responds to /check_payment/:address', function (done) {
     request(server)
-            .get('/check_payment/' + createdPayment.address)
-            .expect(function (res) {
-              let json = JSON.parse(res.text)
-              if (!json) throw new Error('bad json')
-              should.exist(json)
-              json.should.be.an('object')
-              should.exist(json.btc_expected)
-              should.exist(json.btc_actual)
-              should.exist(json.btc_unconfirmed)
-              json.btc_expected.should.equal(0.001)
-              json.btc_actual.should.equal(0)
-              json.btc_unconfirmed.should.equal(0)
-            })
-            .expect(200, done)
+      .get('/check_payment/' + createdPayment.address)
+      .expect(function (res) {
+        let json = JSON.parse(res.text)
+        if (!json) throw new Error('bad json')
+        should.exist(json)
+        json.should.be.an('object')
+        should.exist(json.btc_expected)
+        should.exist(json.btc_actual)
+        should.exist(json.btc_unconfirmed)
+        json.btc_expected.should.equal(0.001)
+        json.btc_actual.should.equal(0)
+        json.btc_unconfirmed.should.equal(0)
+      })
+      .expect(200, done)
   })
 
   it('responds to /payout/:seller/:amount/:currency/:address', function testSlash (done) {
     request(server)
-        .get('/payout/testseller/0.66/BTC/1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa') // satoshi's address from block#0
-        .expect(function (res) {
-          let json = JSON.parse(res.text)
-          should.exist(json.error) // not enough balance
-          expect(json.error.length > 0)
-        })
-        .expect(200, done)
+      .get('/payout/testseller/0.66/BTC/1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa') // satoshi's address from block#0
+      .expect(function (res) {
+        let json = JSON.parse(res.text)
+        should.exist(json.error) // not enough balance
+        expect(json.error.length > 0)
+      })
+      .expect(200, done)
   })
 
   it('responds to /get_seller_balance/testseller', function (done) {
     request(server)
-            .get('/get_seller_balance/testseller')
-            .expect(function (res) {
-              let json = JSON.parse(res.text)
-              should.exist(json)
-              json.should.equal(0)
-            })
-            .expect(200, done)
+      .get('/get_seller_balance/testseller')
+      .expect(function (res) {
+        let json = JSON.parse(res.text)
+        should.exist(json)
+        json.should.equal(0)
+      })
+      .expect(200, done)
   })
 
   it('responds with error to /get_seller_balance/unexistant_seller666', function (done) {
     request(server)
-            .get('/get_seller_balance/unexistant_seller666')
-            .expect(function (res) {
-              let json = JSON.parse(res.text)
-              should.exist(json)
-              json.should.be.an('object')
-              should.exist(json.error)
-            })
-            .expect(200, done)
+      .get('/get_seller_balance/unexistant_seller666')
+      .expect(function (res) {
+        let json = JSON.parse(res.text)
+        should.exist(json)
+        json.should.be.an('object')
+        should.exist(json.error)
+      })
+      .expect(200, done)
+  })
+
+  it('responds to /get_exchange/USD', function (done) {
+    request(server)
+      .get('/get_exchange/USD')
+      .expect(function (res) {
+        let json = JSON.parse(res.text)
+        should.exist(json)
+        json.should.be.an('object')
+      })
+      .expect(200, done)
   })
 })

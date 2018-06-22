@@ -7,7 +7,7 @@
   "license": "WTFPL",
   "author": "Igor Korsakov",
   "scripts": {
-    "postinstall": "mkdir qr && chmod 777 qr",
+    "postinstall": "mkdir qr && chmod 777 qr && mkdir logs && chmod 777 logs",
     "test": "nodejs ./node_modules/.bin/standard && nodejs ./node_modules/.bin/mocha --exit tests/*",
     "clean": "rm -r -f ./node_modules/ && rm -r -f ./qr/"
   },
@@ -27,6 +27,7 @@
     "rewire": "^2.5.2",
     "sinon": "^4.1.2",
     "standard": "^8.6.0",
-    "supertest": "^3.0.0"
+    "supertest": "^3.0.0",
+    "winston": "^3.0.0"
   }
 }
