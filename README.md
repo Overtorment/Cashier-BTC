@@ -200,6 +200,7 @@ SaaS alternatives
 * https://coinsbank.com/merchant
 * https://www.blockonomics.co/merchants#/page1
 * https://www.paybear.io
+* https://globee.com/
 * https://opennode.co/ (lightning)
 * https://strike.acinq.co/ (lightning)
 * ~~coinbase~~ crap
