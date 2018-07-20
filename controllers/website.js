@@ -21,7 +21,7 @@ router.get('/generate_qr/:text', function (req, res) {
   qrSvg.pipe(fs.createWriteStream(filename))
   qrSvg.on('end', function () {
     // res.redirect(301, '/' + filename)
-    res.send('/' + filename)
+    res.send(filename)
     res.end()
   })
   qrSvg.on('error', function () {
