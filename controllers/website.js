@@ -14,7 +14,7 @@ let crypto = require('crypto')
 let fs = require('fs')
 
 router.get('/generate_qr/:text', function (req, res) {
-  let redirectPath = req.query.path
+  let redirectPath = req.query.path | ''
   let filename
   let qrSvg
   filename = 'qr/' + crypto.createHash('sha1').update(decodeURIComponent(req.params.text)).digest('hex') + '.png'
