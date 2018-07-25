@@ -130,10 +130,6 @@ router.get('/check_payment/:address', function (req, res) {
   })
 })
 
-/**
- * optional query parameter
- *  ?fee - transaction fee in Satoshi amount
- */
 router.get('/payout/:seller/:amount/:currency/:address', async function (req, res) {
   if (req.params.currency !== 'BTC') {
     return res.send(JSON.stringify({'error': 'bad currency'}))
@@ -162,7 +158,7 @@ router.get('/payout/:seller/:amount/:currency/:address', async function (req, re
         // assume source address is SegWit P2SH
         createTx = signer.createSegwitTransaction
       }
-      let fee = config.default_fee_satoshi
+      let fee = 0.0001
       if (req.query.fee !== null) {
         fee = parseInt(req.query.fee)
       }
