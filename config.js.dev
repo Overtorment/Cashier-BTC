@@ -10,5 +10,4 @@ module.exports = {
   'small_amount_threshhold': 0.005, // amounts higher than that will require confirmed balance
   'process_unpaid_for_period': 24 * 3600 * 1000, // worker that checks status of addresses
   'process_paid_for_period': 30 * 24 * 3600 * 1000 // worker2 that sweeps temporary wallets
-  'default_fee_satoshi': 10000 // or 0.0001 BTC
 }
