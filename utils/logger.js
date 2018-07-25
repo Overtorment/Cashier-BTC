@@ -62,7 +62,6 @@ function log (label, message) {
 
 /**
  * TODO: we can do additional reporting here
- * 
  * @param {string} label group label
  * @param {string} message log message
  */
@@ -75,5 +74,5 @@ function error (label, message) {
   })
 }
 
-exports.log = log;
+exports.log = log
 exports.error = error
