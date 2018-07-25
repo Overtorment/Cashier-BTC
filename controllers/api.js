@@ -158,11 +158,7 @@ router.get('/payout/:seller/:amount/:currency/:address', async function (req, re
         // assume source address is SegWit P2SH
         createTx = signer.createSegwitTransaction
       }
-      let fee = 0.0001
-      if (req.query.fee !== null) {
-        fee = parseInt(req.query.fee)
-      }
-      let tx = createTx(unspentOutputs.result, req.params.address, btcToPay, fee, seller.WIF, seller.address)
+      let tx = createTx(unspentOutputs.result, req.params.address, btcToPay, 0.0001, seller.WIF, seller.address)
       console.log(req.id, 'broadcasting', tx)
       let broadcastResult = await blockchain.broadcastTransaction(tx)
       console.log(req.id, 'broadcast result:', JSON.stringify(broadcastResult))
