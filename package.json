@@ -27,6 +27,7 @@
     "rewire": "^2.5.2",
     "sinon": "^4.1.2",
     "standard": "^8.6.0",
-    "supertest": "^3.0.0"
+    "supertest": "^3.0.0",
+    "winston": "^3.0.0"
   }
 }

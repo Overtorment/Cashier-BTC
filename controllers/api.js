@@ -23,6 +23,7 @@ let config = require('../config')
 let blockchain = require('../models/blockchain')
 let storage = require('../models/storage')
 let signer = require('../models/signer')
+let logger = require('../utils/logger')
 
 router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callback_url', function (req, res) {
   let exchangeRate, btcToAsk, satoshiToAsk
@@ -74,11 +75,11 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
   };
 
   (async function () {
-    console.log(req.id, 'checking seller existance...')
+    logger.log('/request_payment', [ req.id, 'checking seller existance...' ])
     let responseBody = await storage.getSellerPromise(req.params.seller)
 
     if (typeof responseBody.error !== 'undefined') { // seller doesnt exist
-      console.log(req.id, 'seller doesnt exist. creating...')
+      logger.log('/request_payment', [ req.id, 'seller doesnt exist. creating...' ])
       let address = signer.generateNewSegwitAddress()
       let sellerData = {
         'WIF': address.WIF,
@@ -88,20 +89,20 @@ router.get('/request_payment/:expect/:currency/:message/:seller/:customer/:callb
         '_id': req.params.seller,
         'doctype': 'seller'
       }
-      console.log(req.id, 'created', req.params.seller, '(', sellerData.address, ')')
+      logger.log('/request_payment', [ req.id, 'created', req.params.seller, '(', sellerData.address, ')' ])
       await storage.saveSellerPromise(req.params.seller, sellerData)
       await blockchain.importaddress(sellerData.address)
     } else { // seller exists
-      console.log(req.id, 'seller already exists')
+      logger.log('/request_payment', [ req.id, 'seller already exists' ])
     }
 
-    console.log(req.id, 'created address', addressData.address)
+    logger.log('/request_payment', [ req.id, 'created address', addressData.address ])
     await storage.saveAddressPromise(addressData)
     await blockchain.importaddress(addressData.address)
 
     res.send(JSON.stringify(answer))
   })().catch((error) => {
-    console.log(req.id, error)
+    logger.error('/request_payment', [ req.id, error ])
     res.send(JSON.stringify({error: error.message}))
   })
 })
@@ -124,7 +125,7 @@ router.get('/check_payment/:address', function (req, res) {
       }
       res.send(JSON.stringify(answer))
     } else {
-      console.log(req.id, 'storage error', JSON.stringify(addressJson))
+      logger.error('/check_payment', [ req.id, 'storage error', JSON.stringify(addressJson) ])
       res.send(JSON.stringify({'error': 'storage error'}))
     }
   })
@@ -152,16 +153,16 @@ router.get('/payout/:seller/:amount/:currency/:address', async function (req, re
 
     if (amount >= btcToPay) { // balance is ok
       let unspentOutputs = await blockchain.listunspent(seller.address)
-      console.log(req.id, 'sending', btcToPay, 'from', req.params.seller, '(', seller.address, ')', 'to', req.params.address)
+      logger.log('/payout', [ req.id, 'sending', btcToPay, 'from', req.params.seller, '(', seller.address, ')', 'to', req.params.address ])
       let createTx = signer.createTransaction
       if (seller.address[0] === '3') {
         // assume source address is SegWit P2SH
         createTx = signer.createSegwitTransaction
       }
       let tx = createTx(unspentOutputs.result, req.params.address, btcToPay, 0.0001, seller.WIF, seller.address)
-      console.log(req.id, 'broadcasting', tx)
+      logger.log('/payout', [ req.id, 'broadcasting', tx ])
       let broadcastResult = await blockchain.broadcastTransaction(tx)
-      console.log(req.id, 'broadcast result:', JSON.stringify(broadcastResult))
+      logger.log('/payout', [ req.id, 'broadcast result:', JSON.stringify(broadcastResult) ])
       let data = {
         'seller': req.params.seller,
         'btc': btcToPay,
@@ -175,11 +176,11 @@ router.get('/payout/:seller/:amount/:currency/:address', async function (req, re
       await storage.savePayoutPromise(data)
       res.send(JSON.stringify(broadcastResult))
     } else {
-      console.log(req.id, 'not enough balance')
+      logger.log('/payout', [ req.id, 'not enough balance' ])
       return res.send({'error': 'not enough balance'})
     }
   } catch (error) {
-    console.log(req.id, error)
+    logger.error('/payout', [ req.id, error ])
     return res.send({'error': error.message})
   }
 })
@@ -188,7 +189,7 @@ router.get('/get_seller_balance/:seller', function (req, res) {
   (async function () {
     let seller = await storage.getSellerPromise(req.params.seller)
     if (seller === false || typeof seller.error !== 'undefined') {
-      console.log(req.id, 'no such seller')
+      logger.log('/get_seller_balance', [ req.id, 'no such seller' ])
       return res.send(JSON.stringify({'error': 'no such seller'}))
     }
 
@@ -199,7 +200,7 @@ router.get('/get_seller_balance/:seller', function (req, res) {
     }
     res.send(JSON.stringify(answer))
   })().catch((error) => {
-    console.log(req.id, error)
+    logger.error('/get_seller_balance', [ req.id, error ])
     res.send(JSON.stringify({'error': error.message}))
   })
 })
