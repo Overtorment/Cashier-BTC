@@ -11,6 +11,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 let express = require('express')
 let morgan = require('morgan')
 let uuid = require('node-uuid')
+let logger = require('./utils/logger')
 
 morgan.token('id', function getId (req) {
   return req.id
@@ -60,7 +61,7 @@ require('./smoke-test')
 require('./deploy-design-docs') // checking design docs in Couchdb
 
 let server = app.listen(config.port, function () {
-  console.log('Listening on port %d', config.port)
+  logger.log('BOOT', ['Listening on port %d', config.port])
 })
 
 module.exports = server
