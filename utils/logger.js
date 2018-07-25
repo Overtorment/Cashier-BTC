@@ -6,12 +6,11 @@
 * Author: Michael Samonte
 *
 + + + + + + + + + + + + + + + + + + + + + */
-import fs from 'fs'
-import {
-  createLogger,
-  format,
-  transports
-} from 'winston'
+let fs = require('fs')
+let winston = require('winston')
+let createLogger = winston.createLogger
+let format = winston.format
+let transports = winston.transports
 
 /* + + + + + + + + + + + + + + + + + + + + +
 // Start
@@ -52,7 +51,7 @@ if (!fs.existsSync('logs')) {
  * @param {string} label group label
  * @param {string} message log message
  */
-export function log (label, message) {
+function log (label, message) {
   console.log(new Date(), label, message)
   logger.log({
     level: 'info',
@@ -67,7 +66,7 @@ export function log (label, message) {
  * @param {string} label group label
  * @param {string} message log message
  */
-export function error (label, message) {
+function error (label, message) {
   console.error(new Date(), label, message)
   logger.log({
     level: 'error',
@@ -75,3 +74,6 @@ export function error (label, message) {
     message: JSON.stringify(message)
   })
 }
+
+exports.log = log;
+exports.error = error
