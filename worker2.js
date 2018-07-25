@@ -17,11 +17,13 @@ let storage = require('./models/storage')
 let config = require('./config')
 let blockchain = require('./models/blockchain')
 let signer = require('./models/signer')
+let logger = require('./utils/logger')
 
 require('./smoke-test')
 
 ;(async () => {
   while (1) {
+    // we dont want to flood our log file, skipping this console.log
     console.log('worker2.js', '.')
     let wait = ms => new Promise(resolve => setTimeout(resolve, ms))
     let job = await storage.getPaidAdressesNewerThanPromise(Date.now() - config.process_paid_for_period)
@@ -38,11 +40,11 @@ async function processJob (rows) {
     let json = row.doc
 
     let received = await blockchain.getreceivedbyaddress(json.address)
-    console.log('worker2.js', 'address:', json.address, 'expect:', json.btc_to_ask, 'confirmed:', received[1].result, 'unconfirmed:', received[0].result)
+    logger.log('worker2.js', [ 'address:', json.address, 'expect:', json.btc_to_ask, 'confirmed:', received[1].result, 'unconfirmed:', received[0].result ])
 
     if (+received[1].result === +received[0].result && received[0].result > 0) { // balance is ok, need to transfer it
       let seller = await storage.getSellerPromise(json.seller)
-      console.log('worker2.js', 'transferring', received[0].result, 'BTC (minus fee) from', json.address, 'to seller', seller.seller, '(', seller.address, ')')
+      logger.log('worker2.js', [ 'transferring', received[0].result, 'BTC (minus fee) from', json.address, 'to seller', seller.seller, '(', seller.address, ')' ])
       let unspentOutputs = await blockchain.listunspent(json.address)
 
       let createTx = signer.createTransaction
@@ -52,9 +54,9 @@ async function processJob (rows) {
         createTx = signer.createSegwitTransaction
       }
       let tx = createTx(unspentOutputs.result, seller.address, received[0].result, 0.0001, json.WIF)
-      console.log('worker2.js', 'broadcasting', tx)
+      logger.log('worker2.js', [ 'broadcasting', tx ])
       let broadcastResult = await blockchain.broadcastTransaction(tx)
-      console.log('worker2.js', 'broadcast result:', JSON.stringify(broadcastResult))
+      logger.log('worker2.js', [ 'broadcast result:', JSON.stringify(broadcastResult) ])
 
       json.processed = 'paid_and_sweeped'
       json.sweep_result = json.sweep_result || {}
@@ -65,7 +67,7 @@ async function processJob (rows) {
 
       await storage.saveJobResultsPromise(json)
     } else {
-      console.log('worker2.js', 'balance is not ok, skip')
+      logger.log('worker2.js', 'balance is not ok, skip')
     }
   }
 }

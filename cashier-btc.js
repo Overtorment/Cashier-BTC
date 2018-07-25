@@ -46,7 +46,7 @@ let updateExchangeRate = async function (pair) {
   try {
     json = await rp.get({url: 'https://www.bitstamp.net/api/v2/ticker/' + pair, json: true})
   } catch (err) {
-    return console.log(err.message)
+    logger.error('updateExchangeRate', err.message)
   }
   switch (pair) {
     case 'btceur': global.btcEur = json.ask; break
@@ -61,7 +61,7 @@ require('./smoke-test')
 require('./deploy-design-docs') // checking design docs in Couchdb
 
 let server = app.listen(config.port, function () {
-  logger.log('BOOT', ['Listening on port %d', config.port])
+  logger.log('BOOTING UP', ['Listening on port %d', config.port])
 })
 
 module.exports = server
